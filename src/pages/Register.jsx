@@ -23,6 +23,7 @@ const Register = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({
@@ -32,25 +33,36 @@ const Register = () => {
   };
 
   const validateForm = () => {
-    const { email, password, confirmPassword } = formData;
+    const { firstName, lastName, email, password, confirmPassword } = formData;
+    const newFieldErrors = {};
 
-    if (!email || !password || !confirmPassword) {
-      return "Email, password and confirm password are required.";
+    if (!email) newFieldErrors.email = "Email is required.";
+    if (!password) newFieldErrors.password = "Password is required.";
+    if (!confirmPassword)
+      newFieldErrors.confirmPassword = "Confirm password is required.";
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email && !emailRegex.test(email))
+      newFieldErrors.email = "Email must be a valid address (e.g. user@example.com).";
+
+    if (password && password.length < 8)
+      newFieldErrors.password = "Password must be at least 8 characters.";
+
+    if (password && confirmPassword && password !== confirmPassword)
+      newFieldErrors.confirmPassword = "Passwords do not match.";
+
+    // optional: trim/length checks for names
+    if (firstName && firstName.trim().length > 50)
+      newFieldErrors.firstName = "First name is too long.";
+    if (lastName && lastName.trim().length > 50)
+      newFieldErrors.lastName = "Last name is too long.";
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      return "Please correct the highlighted fields.";
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
-    if (!emailRegex.test(email)) {
-      return "Email must be a valid .com address (e.g. user@example.com).";
-    }
-
-    if (password.length < 6) {
-      return "Password must be at least 6 characters.";
-    }
-
-    if (password !== confirmPassword) {
-      return "Passwords do not match.";
-    }
-
+    setFieldErrors({});
     return null;
   };
 
@@ -114,6 +126,9 @@ const Register = () => {
             value={formData.firstName}
             onChange={handleChange}
           />
+          {fieldErrors.firstName && (
+            <div className="text-danger small">{fieldErrors.firstName}</div>
+          )}
         </div>
 
         <div className="mb-3">
@@ -125,6 +140,9 @@ const Register = () => {
             value={formData.lastName}
             onChange={handleChange}
           />
+          {fieldErrors.lastName && (
+            <div className="text-danger small">{fieldErrors.lastName}</div>
+          )}
         </div>
 
         <div className="mb-3">
@@ -136,6 +154,9 @@ const Register = () => {
             value={formData.email}
             onChange={handleChange}
           />
+          {fieldErrors.email && (
+            <div className="text-danger small">{fieldErrors.email}</div>
+          )}
         </div>
 
         <div className="mb-3">
@@ -147,6 +168,9 @@ const Register = () => {
             value={formData.password}
             onChange={handleChange}
           />
+          {fieldErrors.password && (
+            <div className="text-danger small">{fieldErrors.password}</div>
+          )}
         </div>
 
         <div className="mb-3">
@@ -158,6 +182,9 @@ const Register = () => {
             value={formData.confirmPassword}
             onChange={handleChange}
           />
+          {fieldErrors.confirmPassword && (
+            <div className="text-danger small">{fieldErrors.confirmPassword}</div>
+          )}
         </div>
 
         <button

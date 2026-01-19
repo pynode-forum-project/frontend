@@ -14,14 +14,14 @@ Purpose: document the authentication-related endpoints, request/response shapes,
 	{
 	"firstName": "string",
 	"lastName": "string",
-	"email": "string",   // frontend expects .com addresses for now
+	"email": "string",   // frontend validates general valid email addresses
 	"password": "string",
 	"confirmPassword": "string"
 	}
 
 - Frontend validation rules (must be enforced server-side as well):
-	- `email`: required, valid email format, currently frontend checks `.com` top-level domain; backend SHOULD accept any valid email but can note restrictions.
-	- `password`: required, minimum 6 characters.
+	- `email`: required, valid email format; frontend validates general valid email addresses and backend SHOULD accept any valid email.
+	- `password`: required, minimum 8 characters.
 	- `confirmPassword`: required and must exactly match `password`.
 	- `firstName` / `lastName`: optional but prefer trimming and max length (e.g. 50 chars).
 
@@ -35,7 +35,12 @@ Purpose: document the authentication-related endpoints, request/response shapes,
 - Failure responses (examples):
 	- 400 Bad Request — validation errors
 		{
-			"errors": { "email": "Invalid email", "password": "Too short" }
+			"message": "Validation failed",
+			"details": {
+				"email": "Invalid email",
+				"password": "Too short",
+				"firstName": "Too long"
+			}
 		}
 	- 409 Conflict — email already exists
 		{ "message": "Email already in use" }
@@ -89,8 +94,8 @@ Purpose: document the authentication-related endpoints, request/response shapes,
 
 ## 5) Common validation rules (summary)
 
-- `email`: required, valid email format. Frontend currently restricts to `.com` for quick validation but backend should accept any valid TLD.
-- `password`: required, min 6 chars. Consider adding complexity rules (uppercase, number) if backend requires them; keep frontend consistent.
+- `email`: required, valid email format. Frontend validates general valid email addresses; backend should accept any valid TLD.
+- `password`: required, min 8 chars. Consider adding complexity rules (uppercase, number) if backend requires them; keep frontend consistent.
 - `confirmPassword`: required and must equal `password` for register and reset.
 - Fields should be trimmed of leading/trailing whitespace.
 
