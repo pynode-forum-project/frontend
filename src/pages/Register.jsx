@@ -111,11 +111,6 @@ const Register = () => {
         </div>
       )}
 
-      {!success && (
-        <form onSubmit={handleSubmit}>
-          {/* form fields */}
-        </form>
-      )}
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">First Name</label>
