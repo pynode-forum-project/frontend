@@ -1,6 +1,8 @@
 import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import "../styles/auth.css";
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -81,12 +83,13 @@ const Login = () => {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "450px" }}>
-      <h2 className="mb-4 text-center">Login</h2>
+    <div className="auth-wrapper auth-center">
+      <div className="auth-card">
+        <h2 className="mb-4 text-center">Login</h2>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+        {error && <div className="alert alert-danger">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
+        <form className="auth-form" onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">Email</label>
           <input
@@ -124,13 +127,14 @@ const Login = () => {
         >
           {loading ? "Logging in..." : "Login"}
         </button>
-      </form>
+        </form>
 
-      <div className="mt-3 text-center">
-        <p>
-          Don’t have an account?{" "}
-          <Link to="/users/register">Register here</Link>
-        </p>
+        <div className="mt-3 text-center">
+          <p>
+            Don’t have an account?{" "}
+            <Link to="/users/register">Register here</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

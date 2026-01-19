@@ -3,12 +3,12 @@ import Navbar from '../components/Navbar'
 
 const MainLayout = () => {
   return (
-    <>
+    <div className="app-shell">
       <Navbar />
-      <main style={{ padding: '16px' }}>
+      <main className="app-main">
         <Outlet />
       </main>
-    </>
+    </div>
   )
 }
 

@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
+
 const Register = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useContext(AuthContext);
@@ -99,19 +100,20 @@ const Register = () => {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "500px" }}>
-      <h2 className="mb-4 text-center">Register</h2>
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        <h2 className="mb-4 text-center">Register</h2>
 
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && (
-        <div className="alert alert-success">
-          Registration successful. Please check your email to verify your account.
-          <br />
-          Redirecting to login...
-        </div>
-      )}
+        {error && <div className="alert alert-danger">{error}</div>}
+        {success && (
+          <div className="alert alert-success">
+            Registration successful. Please check your email to verify your account.
+            <br />
+            Redirecting to login...
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit}>
+        <form className="auth-form" onSubmit={handleSubmit}>
         <div className="mb-3">
           <label className="form-label">First Name</label>
           <input
@@ -191,10 +193,11 @@ const Register = () => {
         </button>
       </form>
 
-      <p className="mt-3 text-center">
-        Already have an account?{" "}
-        <Link to="/users/login">Login here</Link>
-      </p>
+        <p className="mt-3 text-center">
+          Already have an account?{" "}
+          <Link to="/users/login">Login here</Link>
+        </p>
+      </div>
     </div>
   );
 };
