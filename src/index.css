@@ -24,10 +24,24 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Make #root fill viewport so internal containers can center content */
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* App shell: the container we control for centering layout */
+.app-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* horizontal centering */
+  justify-content: flex-start; /* keep navbar at top */
 }
 
 h1 {
@@ -66,3 +80,242 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Layout */
+.app-main {
+  width: 100%;
+  max-width: 70rem; /* ~1120px */
+  margin: 0 auto;    /* centers the main content within the viewport */
+  padding: 1.5rem 1rem;
+}
+
+/* Auth card and form styles */
+.auth-wrapper {
+  position: relative;
+  padding: 0.625rem 0.75rem; /* reduced top spacing */
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 24rem; /* narrower card (~384px) */
+  margin: 0 auto;
+  background-color: #ffffff;
+  color: #213547;
+  border: 1px solid rgba(33, 53, 71, 0.06);
+  border-radius: 0.625rem;
+  padding: 0.75rem; /* smaller padding to save vertical space */
+  box-shadow: 0 0.75rem 2rem rgba(16,24,40,0.06);
+}
+
+.auth-card h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem; /* slightly smaller title */
+  font-weight: 800;
+  color: #0f2533;
+  text-align: center;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* ensure inputs and error text keep stable widths */
+}
+
+.auth-form .mb-3 {
+  margin-bottom: 0.5rem; /* tighter spacing between fields */
+}
+
+.auth-card .form-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  color: #516270;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+  max-width: 26rem; /* ~416px */
+}
+
+.auth-card .form-control {
+  width: 100%;
+  max-width: 20rem; /* keep a comfortable input width */
+  box-sizing: border-box;
+  padding: 0.375rem 0.5rem;
+  height: 2rem;
+  border: 1px solid rgba(33,53,71,0.08);
+  border-radius: 0.375rem;
+  background: #fff;
+  box-shadow: inset 0 0.0625rem 0 rgba(255,255,255,0.6);
+  font-size: 0.95rem;
+  margin: 0 auto;
+  display: block;
+}
+.auth-card .form-control:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 6px 18px rgba(100,108,255,0.12);
+}
+
+.auth-card .btn {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(100,108,255,0.10);
+  display: block;
+  width: 100%;
+  max-width: 20rem; /* ~320px */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Vertical centering for pages that opt in via .auth-center */
+.auth-wrapper.auth-center {
+  min-height: calc(100vh - 6rem); /* subtract estimated navbar height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+.auth-card .btn:hover {
+  box-shadow: 0 12px 28px rgba(100,108,255,0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  .auth-card {
+    background-color: #1a1a1a;
+    color: #e6eef8;
+    border: 1px solid rgba(255,255,255,0.04);
+    box-shadow: none;
+  }
+}
+
+/* Navbar matching card style */
+.app-navbar {
+  width: 100%;
+  background-color: transparent;
+  padding: 14px 16px;
+}
+
+.app-navbar .navbar-inner {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto; /* center within .app-navbar / .app-shell */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border: 1px solid rgba(33,53,71,0.06);
+  border-radius: 12px; /* match auth-card */
+  padding: 12px 20px; /* align with card density */
+  box-shadow: 0 12px 24px rgba(16,24,40,0.06); /* stronger to match card feel */
+}
+
+.app-navbar .brand {
+  font-weight: 700;
+  color: #0f2533; /* same deep tone as card heading */
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.app-navbar .nav-items {
+  display: flex;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.app-navbar .nav-link {
+  color: #213547;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.app-navbar .nav-link:hover {
+  background-color: rgba(33,53,71,0.05);
+}
+
+.app-navbar .btn-logout {
+  background: none;
+  border: none;
+  color: #213547;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+.app-navbar .btn-logout:hover {
+  background-color: rgba(33,53,71,0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-navbar .navbar-inner {
+    background-color: #141414;
+    color: #e6eef8;
+    border: 1px solid rgba(255,255,255,0.03);
+    box-shadow: none;
+  }
+  .app-navbar .nav-link, .app-navbar .brand, .app-navbar .btn-logout {
+    color: #e6eef8;
+  }
+}
+
+/* Global primary button (ensure available for all pages) */
+.btn-primary {
+  background-color: #5867f6;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+}
+.btn-primary:disabled {
+  background-color: rgba(88,103,246,0.5);
+  cursor: not-allowed;
+}
+
+/* Lightweight compatibility utilities (map common Bootstrap-like classes) */
+.container {
+  width: 100%;
+  max-width: 70rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+.mt-5 { margin-top: 3rem; }
+.mt-3 { margin-top: 1rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.text-center { text-align: center; }
+.w-100 { width: 100% !important; }
+.ms-auto { margin-left: auto; }
+
+/* Basic buttons used by JSX (small compatibility layer) */
+.btn {
+  display: inline-block;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #f7f7f8;
+  border: 1px solid rgba(33,53,71,0.06);
+  cursor: pointer;
+}
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Navbar compatibility (minimal) */
+.navbar-nav { list-style: none; margin: 0; padding: 0; display: flex; gap: 0.5rem; align-items: center; }
+.nav-item { list-style: none; }
+.nav-link { color: inherit; text-decoration: none; padding: 0.25rem 0.5rem; border-radius: 6px; }
+.nav-link:hover { background-color: rgba(33,53,71,0.04); }
+

@@ -3,12 +3,12 @@ import { Outlet } from "react-router-dom";
 
 const App = () => {
   return (
-    <>
+    <div className="app-shell">
       <Navbar />
-      <main className="container mt-4">
+      <main className="app-main">
         <Outlet />
       </main>
-    </>
+    </div>
   );
 };
 

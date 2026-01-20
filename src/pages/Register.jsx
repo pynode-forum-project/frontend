@@ -99,102 +99,104 @@ const Register = () => {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "500px" }}>
-      <h2 className="mb-4 text-center">Register</h2>
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        <h2 className="mb-4">Register</h2>
 
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && (
-        <div className="alert alert-success">
-          Registration successful. Please check your email to verify your account.
-          <br />
-          Redirecting to login...
-        </div>
-      )}
+        {error && <div className="alert alert-danger">{error}</div>}
+        {success && (
+          <div className="alert alert-success">
+            Registration successful. Please check your email to verify your account.
+            <br />
+            Redirecting to login...
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">First Name</label>
-          <input
-            type="text"
-            name="firstName"
-            className="form-control"
-            value={formData.firstName}
-            onChange={handleChange}
-          />
-          {fieldErrors.firstName && (
-            <div className="text-danger small">{fieldErrors.firstName}</div>
-          )}
-        </div>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">First Name</label>
+            <input
+              type="text"
+              name="firstName"
+              className="form-control"
+              value={formData.firstName}
+              onChange={handleChange}
+            />
+            {fieldErrors.firstName && (
+              <div className="text-danger small">{fieldErrors.firstName}</div>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Last Name</label>
-          <input
-            type="text"
-            name="lastName"
-            className="form-control"
-            value={formData.lastName}
-            onChange={handleChange}
-          />
-          {fieldErrors.lastName && (
-            <div className="text-danger small">{fieldErrors.lastName}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label className="form-label">Last Name</label>
+            <input
+              type="text"
+              name="lastName"
+              className="form-control"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
+            {fieldErrors.lastName && (
+              <div className="text-danger small">{fieldErrors.lastName}</div>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          {fieldErrors.email && (
-            <div className="text-danger small">{fieldErrors.email}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              name="email"
+              className="form-control"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            {fieldErrors.email && (
+              <div className="text-danger small">{fieldErrors.email}</div>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleChange}
-          />
-          {fieldErrors.password && (
-            <div className="text-danger small">{fieldErrors.password}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              className="form-control"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            {fieldErrors.password && (
+              <div className="text-danger small">{fieldErrors.password}</div>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            className="form-control"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-          />
-          {fieldErrors.confirmPassword && (
-            <div className="text-danger small">{fieldErrors.confirmPassword}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label className="form-label">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              className="form-control"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+            />
+            {fieldErrors.confirmPassword && (
+              <div className="text-danger small">{fieldErrors.confirmPassword}</div>
+            )}
+          </div>
 
-        <button
-          type="submit"
-          className="btn btn-primary w-100"
-          disabled={loading}
-        >
-          {loading ? "Registering..." : "Register"}
-        </button>
-      </form>
+          <button
+            type="submit"
+            className="btn btn-primary w-100"
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
-      <p className="mt-3 text-center">
-        Already have an account?{" "}
-        <Link to="/users/login">Login here</Link>
-      </p>
+        <p className="mt-3 text-center">
+          Already have an account?{" "}
+          <Link to="/users/login">Login here</Link>
+        </p>
+      </div>
     </div>
   );
 };
