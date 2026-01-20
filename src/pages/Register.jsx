@@ -1,6 +1,8 @@
-import { useState, useContext, useEffect } from "react";
+import React from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { register as apiRegister } from "../services/authApi";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -24,6 +26,13 @@ const Register = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const refs = {
+    firstName: useRef(null),
+    lastName: useRef(null),
+    email: useRef(null),
+    password: useRef(null),
+    confirmPassword: useRef(null),
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -80,18 +89,34 @@ const Register = () => {
 
     try {
       setLoading(true);
+      // Call Gateway -> Auth Service
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+      };
 
-      // mock register success
-      setTimeout(() => {
-        setSuccess(
-          "Registration successful. Please check your email to verify your account."
-        );
+      const res = await apiRegister(payload);
+
+      if (res.ok && res.status === 201) {
+        setSuccess("Registration successful. Please check your email to verify your account.");
         setLoading(false);
+        setTimeout(() => navigate('/users/login', { replace: true }), 1200);
+        return;
+      }
 
-        setTimeout(() => {
-          navigate("/users/login", { replace: true });
-        }, 1500);
-      }, 800);
+      // Handle 4xx user errors and field-level details
+      if (res.body && res.body.details && typeof res.body.details === 'object') {
+        setFieldErrors(res.body.details);
+        // focus first field with error
+        const firstKey = Object.keys(res.body.details)[0];
+        if (firstKey && refs[firstKey] && refs[firstKey].current) refs[firstKey].current.focus();
+      }
+
+      const msg = (res.body && (res.body.error || res.body.message)) || 'Registration failed.';
+      setError(msg);
+      setLoading(false);
     } catch (err) {
       setError("Registration failed. Please try again.");
       setLoading(false);
@@ -114,13 +139,15 @@ const Register = () => {
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label className="form-label">First Name</label>
+            <label htmlFor="firstName" className="form-label">First Name</label>
             <input
+              id="firstName"
               type="text"
               name="firstName"
               className="form-control"
               value={formData.firstName}
               onChange={handleChange}
+              ref={refs.firstName}
             />
             {fieldErrors.firstName && (
               <div className="text-danger small">{fieldErrors.firstName}</div>
@@ -128,13 +155,15 @@ const Register = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Last Name</label>
+            <label htmlFor="lastName" className="form-label">Last Name</label>
             <input
+              id="lastName"
               type="text"
               name="lastName"
               className="form-control"
               value={formData.lastName}
               onChange={handleChange}
+              ref={refs.lastName}
             />
             {fieldErrors.lastName && (
               <div className="text-danger small">{fieldErrors.lastName}</div>
@@ -142,13 +171,15 @@ const Register = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Email</label>
+            <label htmlFor="email" className="form-label">Email</label>
             <input
+              id="email"
               type="email"
               name="email"
               className="form-control"
               value={formData.email}
               onChange={handleChange}
+              ref={refs.email}
             />
             {fieldErrors.email && (
               <div className="text-danger small">{fieldErrors.email}</div>
@@ -156,13 +187,15 @@ const Register = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">Password</label>
             <input
+              id="password"
               type="password"
               name="password"
               className="form-control"
               value={formData.password}
               onChange={handleChange}
+              ref={refs.password}
             />
             {fieldErrors.password && (
               <div className="text-danger small">{fieldErrors.password}</div>
@@ -170,13 +203,15 @@ const Register = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
             <input
+              id="confirmPassword"
               type="password"
               name="confirmPassword"
               className="form-control"
               value={formData.confirmPassword}
               onChange={handleChange}
+              ref={refs.confirmPassword}
             />
             {fieldErrors.confirmPassword && (
               <div className="text-danger small">{fieldErrors.confirmPassword}</div>
