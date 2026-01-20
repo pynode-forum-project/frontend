@@ -45,6 +45,8 @@ const Register = () => {
     const { firstName, lastName, email, password, confirmPassword } = formData;
     const newFieldErrors = {};
 
+    if (!firstName || !firstName.trim()) newFieldErrors.firstName = "First name is required.";
+    if (!lastName || !lastName.trim()) newFieldErrors.lastName = "Last name is required.";
     if (!email) newFieldErrors.email = "Email is required.";
     if (!password) newFieldErrors.password = "Password is required.";
     if (!confirmPassword)
@@ -68,6 +70,9 @@ const Register = () => {
 
     if (Object.keys(newFieldErrors).length > 0) {
       setFieldErrors(newFieldErrors);
+      // focus first invalid field
+      const firstKey = Object.keys(newFieldErrors)[0];
+      if (firstKey && refs[firstKey] && refs[firstKey].current) refs[firstKey].current.focus();
       return "Please correct the highlighted fields.";
     }
 
@@ -149,9 +154,7 @@ const Register = () => {
               onChange={handleChange}
               ref={refs.firstName}
             />
-            {fieldErrors.firstName && (
-              <div className="text-danger small">{fieldErrors.firstName}</div>
-            )}
+            <div className="text-danger small field-error">{fieldErrors.firstName || '\u00A0'}</div>
           </div>
 
           <div className="mb-3">
@@ -165,9 +168,7 @@ const Register = () => {
               onChange={handleChange}
               ref={refs.lastName}
             />
-            {fieldErrors.lastName && (
-              <div className="text-danger small">{fieldErrors.lastName}</div>
-            )}
+            <div className="text-danger small field-error">{fieldErrors.lastName || '\u00A0'}</div>
           </div>
 
           <div className="mb-3">
@@ -181,9 +182,7 @@ const Register = () => {
               onChange={handleChange}
               ref={refs.email}
             />
-            {fieldErrors.email && (
-              <div className="text-danger small">{fieldErrors.email}</div>
-            )}
+            <div className="text-danger small field-error">{fieldErrors.email || '\u00A0'}</div>
           </div>
 
           <div className="mb-3">
@@ -197,9 +196,7 @@ const Register = () => {
               onChange={handleChange}
               ref={refs.password}
             />
-            {fieldErrors.password && (
-              <div className="text-danger small">{fieldErrors.password}</div>
-            )}
+            <div className="text-danger small field-error">{fieldErrors.password || '\u00A0'}</div>
           </div>
 
           <div className="mb-3">
@@ -213,9 +210,7 @@ const Register = () => {
               onChange={handleChange}
               ref={refs.confirmPassword}
             />
-            {fieldErrors.confirmPassword && (
-              <div className="text-danger small">{fieldErrors.confirmPassword}</div>
-            )}
+            <div className="text-danger small field-error">{fieldErrors.confirmPassword || '\u00A0'}</div>
           </div>
 
           <button

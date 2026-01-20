@@ -157,6 +157,13 @@ button:focus-visible {
   box-shadow: 0 6px 18px rgba(100,108,255,0.12);
 }
 
+/* Reserve vertical space for per-field error messages to avoid layout shifts */
+.auth-card .field-error {
+  min-height: 1rem; /* keeps consistent height when message appears/disappears */
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
 .auth-card .btn {
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
