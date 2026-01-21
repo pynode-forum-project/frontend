@@ -176,19 +176,459 @@ If you want, I can produce an OpenAPI fragment or Postman examples next.
 	- If `profileImageURL` is null or empty, frontend will use a placeholder image.
 	- The `dateJoined` field should be in ISO 8601 format (e.g., "2024-01-15T10:30:00Z") for proper date parsing.
 
-## 11) Notes / Questions for backend
+## 12) Update User Profile (PUT /api/users/me)
 
-- Do auth endpoints live under `/api/auth` or another prefix? Please confirm.
-- Does the backend restrict emails to `.com`? If not, frontend will loosen validation to accept any valid email.
-- Will backend return JWT `token` in the login response, or use HttpOnly cookies? Which method should frontend implement?
-- What shape are validation errors returned in (field map vs array)? Provide an example.
-- User service endpoint `/api/users/me` must validate JWT token and return user data as specified in section 10.
+- Description: update user profile information (firstName, lastName, etc.).
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Request (JSON):
+
+```json
+{
+  "firstName": "string (optional)",
+  "lastName": "string (optional)"
+}
+```
+
+- Success response (200 OK):
+
+```json
+{
+  "userId": "<uuid>",
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string",
+  "profileImageURL": "string",
+  "type": "string",
+  "active": boolean,
+  "dateJoined": "string (ISO 8601)"
+}
+```
+
+- Failure responses:
+  - 400 Bad Request (validation)
+    ```json
+    { "message": "Validation failed", "details": { "firstName": "First name is required" } }
+    ```
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/userApi.js`: `updateUserProfile(profileData)`
+  - Called from `EditProfileModal.jsx` when user updates basic info
+  - Sends only changed fields
+  - Refreshes user context after update
 
 ---
 
-If you'd like, I can also:
-- add inline error handling examples in `src/pages/Register.jsx` and `src/pages/Login.jsx`, or
-- create Postman examples using the agreed shapes.
+## 13) Update Profile Image (PUT /api/users/me/profile-image)
 
-Please confirm preferences and I'll update the frontend accordingly.
+- Description: upload and update user's profile image.
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Content-Type: `multipart/form-data`
+- Request body:
+  - `profileImage`: File (image file)
+
+- Success response (200 OK):
+
+```json
+{
+  "userId": "<uuid>",
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string",
+  "profileImageURL": "string (new image URL)",
+  "type": "string",
+  "active": boolean,
+  "dateJoined": "string (ISO 8601)"
+}
+```
+
+- Failure responses:
+  - 400 Bad Request (invalid file)
+    ```json
+    { "message": "Invalid image file" }
+    ```
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/userApi.js`: `updateProfileImage(imageFile)`
+  - Called from `EditProfileModal.jsx` Tab 1 (Basic Info & Image)
+  - Shows live preview before upload
+  - Converts to data URL in mock mode
+
+---
+
+## 14) Request Email Update (POST /api/users/me/email/request-update)
+
+- Description: initiate email change process by sending verification code to new email.
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Request (JSON):
+
+```json
+{
+  "newEmail": "string (new email address)"
+}
+```
+
+- Success response (200 OK):
+
+```json
+{
+  "message": "Verification code sent to <newEmail>",
+  "success": true
+}
+```
+
+- Failure responses:
+  - 400 Bad Request (validation)
+    ```json
+    { "message": "Email is already in use" }
+    ```
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/userApi.js`: `requestEmailUpdate(newEmail)`
+  - Called from `EditProfileModal.jsx` Tab 2 (Email & Verification)
+  - Shows verification code input step after successful request
+  - Sends verification code to user's new email
+
+---
+
+## 15) Confirm Email Update (POST /api/users/me/email/confirm-update)
+
+- Description: complete email change by verifying the confirmation code.
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Request (JSON):
+
+```json
+{
+  "newEmail": "string",
+  "verificationCode": "string"
+}
+```
+
+- Success response (200 OK):
+
+```json
+{
+  "userId": "<uuid>",
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string (updated email)",
+  "profileImageURL": "string",
+  "type": "string",
+  "active": false,
+  "dateJoined": "string (ISO 8601)"
+}
+```
+
+Note: `active` becomes `false` until user verifies new email via email confirmation link.
+
+- Failure responses:
+  - 400 Bad Request (invalid code)
+    ```json
+    { "message": "Invalid verification code" }
+    ```
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/userApi.js`: `confirmEmailUpdate(newEmail, verificationCode)`
+  - Called from `EditProfileModal.jsx` Tab 2 when user submits verification code
+  - Displays warning: "Your account is now unverified"
+  - Refreshes user context after update
+  - User stays unverified until email is confirmed in backend
+
+---
+
+## 16) Get User Top Posts (GET /api/posts/user/me/top)
+
+- Description: fetch user's top published posts sorted by reply count (descending).
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Query parameters:
+  - `limit` (integer, optional, default: 3, max: 10) - number of top posts
+
+- Success response (200 OK):
+
+```json
+{
+  "success": true,
+  "data": {
+    "posts": [
+      {
+        "postId": "<uuid>",
+        "userId": "<uuid>",
+        "title": "string",
+        "content": "string",
+        "status": "published",
+        "replyCount": 24,
+        "dateCreated": "string (ISO 8601)"
+      }
+    ],
+    "limit": 3
+  },
+  "timestamp": "string (ISO 8601)"
+}
+```
+
+- Failure responses:
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/postApi.js`: `getUserTopPosts(limit)`
+  - Called from `Profile.jsx` on component mount
+  - Displays in "Top 3 Posts" section with reply count badges
+  - Shows empty state if no posts exist
+
+---
+
+## 17) Get User Drafts (GET /api/posts/user/me/drafts)
+
+- Description: fetch user's unpublished draft posts.
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Query parameters:
+  - `page` (integer, optional, default: 1)
+  - `limit` (integer, optional, default: 10)
+
+- Success response (200 OK):
+
+```json
+{
+  "success": true,
+  "data": {
+    "drafts": [
+      {
+        "postId": "<uuid>",
+        "userId": "<uuid>",
+        "title": "string (or empty for untitled drafts)",
+        "content": "string",
+        "status": "unpublished",
+        "dateCreated": "string (ISO 8601)",
+        "dateModified": "string (ISO 8601)"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 5,
+      "totalPages": 1,
+      "hasNextPage": false,
+      "hasPrevPage": false
+    }
+  },
+  "timestamp": "string (ISO 8601)"
+}
+```
+
+- Failure responses:
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/postApi.js`: `getUserDrafts(page, limit)`
+  - Called from `Profile.jsx` on component mount
+  - Displays in "My Drafts" section with Draft badge
+  - Shows modification date and content preview
+  - Shows empty state if no drafts exist
+
+---
+
+## 18) Get View History (GET /api/history)
+
+- Description: fetch user's view history of published posts (most recent first).
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Query parameters:
+  - `page` (integer, optional, default: 1)
+  - `limit` (integer, optional, default: 10)
+
+- Success response (200 OK):
+
+```json
+{
+  "success": true,
+  "data": {
+    "history": [
+      {
+        "userId": "<uuid>",
+        "postId": "<uuid>",
+        "firstViewedAt": "string (ISO 8601)",
+        "lastViewedAt": "string (ISO 8601)",
+        "viewCount": 5,
+        "post": {
+          "postId": "<uuid>",
+          "userId": "<uuid>",
+          "title": "string",
+          "content": "string",
+          "dateCreated": "string (ISO 8601)"
+        }
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "totalPages": 3,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    }
+  },
+  "timestamp": "string (ISO 8601)"
+}
+```
+
+Note: History is sorted by `lastViewedAt` (most recent first). Only published posts are included.
+
+- Failure responses:
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/historyApi.js`: `getViewHistory(page, limit)`
+  - Called from `Profile.jsx` on component mount
+  - Displays in "Recently Viewed Posts" section
+  - Shows view count and last viewed date
+  - Sorted by most recent first
+  - Shows empty state if no history exists
+
+---
+
+## 19) Record Post View (POST /api/history)
+
+- Description: record that user has viewed a specific published post.
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Request (JSON):
+
+```json
+{
+  "postId": "<uuid>"
+}
+```
+
+- Success response (200 OK):
+
+```json
+{
+  "success": true,
+  "data": {
+    "userId": "<uuid>",
+    "postId": "<uuid>",
+    "firstViewedAt": "string (ISO 8601)",
+    "lastViewedAt": "string (ISO 8601)",
+    "viewCount": 1
+  },
+  "timestamp": "string (ISO 8601)"
+}
+```
+
+- Failure responses:
+  - 404 Not Found (post doesn't exist)
+    ```json
+    { "message": "Post not found" }
+    ```
+  - 403 Forbidden (post not published)
+    ```json
+    { "message": "Post is not published" }
+    ```
+  - 401 Unauthorized
+    ```json
+    { "message": "Invalid or expired token" }
+    ```
+
+- Frontend implementation:
+  - Located in `src/services/historyApi.js`: `recordPostView(postId)`
+  - Called when user views a post detail page
+  - Silently fails if post is not published or deleted (non-critical operation)
+  - Updates `lastViewedAt` and increments `viewCount` if entry exists
+
+---
+
+## 20) Frontend Implementation Summary (User Profile Features)
+
+### New Files Created:
+1. `src/services/postApi.js` - Post API service
+2. `src/services/historyApi.js` - History API service
+3. `src/services/mockData.js` - Mock data for testing
+4. `src/components/EditProfileModal.jsx` - Profile edit modal component
+5. `src/components/EditProfileModal.css` - Modal styling
+
+### Updated Files:
+1. `src/services/userApi.js` - Added profile update, image upload, email change endpoints
+2. `src/pages/Profile.jsx` - Added top posts, drafts, and history sections
+3. `src/pages/Profile.css` - Added styles for new profile sections
+4. `src/context/AuthContext.jsx` - Enhanced error logging
+
+### Components:
+- **Profile Page**: Displays user info, top 3 posts, drafts, and view history
+- **EditProfileModal**: Two-tab modal for updating profile and email with verification
+
+### API Calls Flow:
+```
+Profile.jsx
+├── Loads on mount:
+│   ├── getUserTopPosts() → GET /api/posts/user/me/top
+│   ├── getUserDrafts() → GET /api/posts/user/me/drafts
+│   └── getViewHistory() → GET /api/history
+│
+└── Edit Profile Button → EditProfileModal Opens
+    ├── Tab 1 (Basic Info & Image):
+    │   ├── updateUserProfile() → PUT /api/users/me
+    │   └── updateProfileImage() → PUT /api/users/me/profile-image
+    │
+    └── Tab 2 (Email & Verification):
+        ├── requestEmailUpdate() → POST /api/users/me/email/request-update
+        └── confirmEmailUpdate() → POST /api/users/me/email/confirm-update
+```
+
+### Error Handling:
+- All services provide detailed error messages
+- Form shows field-level validation errors where applicable
+- Global error messages for API failures
+- Loading states during API calls
+- Non-critical operations (like recordPostView) fail silently
+
+### Mock Mode Support:
+- Enable with `VITE_MOCK_DATA=true` in `.env`
+- All services return hardcoded test data when mock mode is enabled
+- Simulates 300ms network delay for realistic testing
+- No backend required for development/testing
+
+---
+
+## 21) Notes / Questions for backend
+
+**User Profile Endpoints:**
+1. Confirm `/api/users/me` PUT endpoint exists and accepts `firstName`, `lastName` updates.
+2. Confirm `/api/users/me/profile-image` PUT endpoint exists for profile image uploads.
+3. Confirm email update endpoints return proper error messages for duplicate emails.
+4. Should `active` flag be set to `false` after email change until new email is verified?
+
+**Post & History Endpoints:**
+1. Confirm `/api/posts/user/me/top` endpoint returns posts sorted by `replyCount` (descending).
+2. Confirm `/api/posts/user/me/drafts` returns unpublished posts only.
+3. Confirm `/api/history` returns entries sorted by `lastViewedAt` (most recent first).
+4. Confirm `/api/history` POST creates/updates view entries correctly.
+
+**Data Format:**
+1. All timestamps should be ISO 8601 format for proper frontend parsing.
+2. Error responses should follow the `{ message, details }` format for field-level errors.
+3. Post object should include `replyCount` field for ranking purposes.
+
+---
 
