@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import "./Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -81,56 +82,58 @@ const Login = () => {
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "450px" }}>
-      <h2 className="mb-4 text-center">Login</h2>
+    <div className="login-container">
+      <div className="login-form">
+        <h2 className="login-title">Login</h2>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+        {error && <div className="alert alert-danger">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            value={formData.email}
-            onChange={handleChange}
-            autoComplete="email"
-          />
-          {fieldErrors.email && (
-            <div className="text-danger small">{fieldErrors.email}</div>
-          )}
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input
+              type="email"
+              name="email"
+              className="form-control"
+              value={formData.email}
+              onChange={handleChange}
+              autoComplete="email"
+            />
+            {fieldErrors.email && (
+              <div className="text-danger small">{fieldErrors.email}</div>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              name="password"
+              className="form-control"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+            />
+            {fieldErrors.password && (
+              <div className="text-danger small">{fieldErrors.password}</div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        <div className="login-footer">
+          <p>
+            Don't have an account?{" "}
+            <Link to="/users/register">Register here</Link>
+          </p>
         </div>
-
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleChange}
-            autoComplete="current-password"
-          />
-          {fieldErrors.password && (
-            <div className="text-danger small">{fieldErrors.password}</div>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="btn btn-primary w-100"
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <div className="mt-3 text-center">
-        <p>
-          Don’t have an account?{" "}
-          <Link to="/users/register">Register here</Link>
-        </p>
       </div>
     </div>
   );

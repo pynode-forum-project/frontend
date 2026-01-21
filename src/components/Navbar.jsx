@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import "../styles/navbar.css";
 
 const Navbar = () => {
   // only need isAuthenticated and logout from AuthContext
@@ -13,55 +14,53 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light px-4">
+    <nav className="navbar">
       <Link className="navbar-brand" to="/">
         Forum
       </Link>
 
-      <div className="collapse navbar-collapse show">
-        <ul className="navbar-nav ms-auto">
-          {!isAuthenticated && (
-            <>
-              <li className="nav-item">
-                <Link className="nav-link" to="/users/login">
-                  Login
-                </Link>
-              </li>
+      <ul className="navbar-nav">
+        {!isAuthenticated && (
+          <>
+            <li className="nav-item">
+              <Link className="nav-link" to="/users/login">
+                Login
+              </Link>
+            </li>
 
-              <li className="nav-item">
-                <Link className="nav-link" to="/users/register">
-                  Register
-                </Link>
-              </li>
-            </>
-          )}
+            <li className="nav-item">
+              <Link className="nav-link" to="/users/register">
+                Register
+              </Link>
+            </li>
+          </>
+        )}
 
-          {isAuthenticated && (
-            <>
-              <li className="nav-item">
-                <Link className="nav-link" to="/home">
-                  Home
-                </Link>
-              </li>
+        {isAuthenticated && (
+          <>
+            <li className="nav-item">
+              <Link className="nav-link" to="/home">
+                Home
+              </Link>
+            </li>
 
-              <li className="nav-item">
-                <Link className="nav-link" to="/users/profile">
-                  Profile
-                </Link>
-              </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/users/profile">
+                Profile
+              </Link>
+            </li>
 
-              <li className="nav-item">
-                <button
-                  className="btn btn-link nav-link"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </li>
-            </>
-          )}
-        </ul>
-      </div>
+            <li className="nav-item">
+              <button
+                className="btn-link"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </li>
+          </>
+        )}
+      </ul>
     </nav>
   );
 };

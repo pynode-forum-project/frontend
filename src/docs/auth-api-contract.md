@@ -11,71 +11,73 @@ Purpose: document the authentication-related endpoints, request/response shapes,
 - Description: create a new user and send a verification email.
 - Request body (JSON):
 
-	{
-	"firstName": "string",
-	"lastName": "string",
-	"email": "string",   // frontend validates general valid email addresses
-	"password": "string",
-	"confirmPassword": "string"
-	}
+  {
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string", // frontend validates general valid email addresses
+  "password": "string",
+  "confirmPassword": "string"
+  }
 
 - Frontend validation rules (must be enforced server-side as well):
-	- `email`: required, valid email format; frontend validates general valid email addresses and backend SHOULD accept any valid email.
-	- `password`: required, minimum 8 characters.
-	- `confirmPassword`: required and must exactly match `password`.
-	- `firstName` / `lastName`: optional but prefer trimming and max length (e.g. 50 chars).
+
+  - `email`: required, valid email format; frontend validates general valid email addresses and backend SHOULD accept any valid email.
+  - `password`: required, minimum 8 characters.
+  - `confirmPassword`: required and must exactly match `password`.
+  - `firstName` / `lastName`: optional but prefer trimming and max length (e.g. 50 chars).
 
 - Success response (201 Created):
 
-	{
-		"message": "Registration successful. Verification email sent.",
-		"userId": "<uuid>" // optional
-	}
+  {
+  "message": "Registration successful. Verification email sent.",
+  "userId": "<uuid>" // optional
+  }
 
 - Failure responses (examples):
-	- 400 Bad Request — validation errors
-		{
-			"message": "Validation failed",
-			"details": {
-				"email": "Invalid email",
-				"password": "Too short",
-				"firstName": "Too long"
-			}
-		}
-	- 409 Conflict — email already exists
-		{ "message": "Email already in use" }
+  - 400 Bad Request — validation errors
+    {
+    "message": "Validation failed",
+    "details": {
+    "email": "Invalid email",
+    "password": "Too short",
+    "firstName": "Too long"
+    }
+    }
+  - 409 Conflict — email already exists
+    { "message": "Email already in use" }
 
 ## 2) Login (POST /api/auth/login)
 
 - Description: authenticate a user and return a session token (JWT) or set a cookie.
 - Request body (JSON):
 
-	{
-		"email": "string",
-		"password": "string"
-	}
+  {
+  "email": "string",
+  "password": "string"
+  }
 
 - Frontend expectations:
-	- Backend will return a JSON response containing either a `token` (JWT) or user object and the frontend will store token in local storage / context.
-	- If using HttpOnly cookies, frontend will rely on cookie presence and not store token manually.
+
+  - Backend will return a JSON response containing either a `token` (JWT) or user object and the frontend will store token in local storage / context.
+  - If using HttpOnly cookies, frontend will rely on cookie presence and not store token manually.
 
 - Success response (200 OK):
 
-	{
-		"token": "<jwt-token>",
-		"user": {
-			"id": "<uuid>",
-			"email": "user@example.com",
-			"firstName": "...",
-			"lastName": "..."
-		}
-	}
+  {
+  "token": "<jwt-token>",
+  "user": {
+  "id": "<uuid>",
+  "email": "user@example.com",
+  "firstName": "...",
+  "lastName": "..."
+  }
+  }
 
 - Failure responses:
-	- 401 Unauthorized
-		{ "message": "Invalid credentials" }
-	- 403 Forbidden (unverified email)
-		{ "message": "Email not verified" }
+  - 401 Unauthorized
+    { "message": "Invalid credentials" }
+  - 403 Forbidden (unverified email)
+    { "message": "Email not verified" }
 
 ## 3) Verify email (GET /api/auth/verify?token=...)
 
@@ -86,11 +88,11 @@ Purpose: document the authentication-related endpoints, request/response shapes,
 
 - Flow: request reset -> backend sends email with token -> frontend hits reset endpoint with new password.
 - Reset request (POST /api/auth/forgot)
-	- body: `{ "email": "..." }`
-	- response: 200 OK (even if email not found, to avoid user enumeration).
+  - body: `{ "email": "..." }`
+  - response: 200 OK (even if email not found, to avoid user enumeration).
 - Reset confirm (POST /api/auth/reset)
-	- body: `{ "token": "...", "password": "...", "confirmPassword": "..." }`
-	- validation: password min length and confirm match.
+  - body: `{ "token": "...", "password": "...", "confirmPassword": "..." }`
+  - validation: password min length and confirm match.
 
 ## 5) Common validation rules (summary)
 
@@ -103,18 +105,18 @@ Purpose: document the authentication-related endpoints, request/response shapes,
 
 - For consistency, frontend expects errors in one of these shapes:
 
-	- Field-level errors (400):
+  - Field-level errors (400):
 
-		{
-			"errors": {
-				"email": "Invalid email",
-				"password": "Password too short"
-			}
-		}
+    {
+    "errors": {
+    "email": "Invalid email",
+    "password": "Password too short"
+    }
+    }
 
-	- General error message:
+  - General error message:
 
-		{ "message": "Email already in use" }
+    { "message": "Email already in use" }
 
 Please keep error keys predictable so the frontend can show inline messages.
 
@@ -133,19 +135,19 @@ Please keep error keys predictable so the frontend can show inline messages.
 
 - Register example:
 
-	fetch('/api/auth/register', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ firstName, lastName, email, password, confirmPassword })
-	})
+  fetch('/api/auth/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ firstName, lastName, email, password, confirmPassword })
+  })
 
 - Login example:
 
-	fetch('/api/auth/login', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ email, password })
-	})
+  fetch('/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password })
+  })
 
 ## 10) Notes / Questions for backend
 
@@ -157,8 +159,59 @@ Please keep error keys predictable so the frontend can show inline messages.
 ---
 
 If you'd like, I can also:
+
 - add inline error handling examples in `src/pages/Register.jsx` and `src/pages/Login.jsx`, or
 - create Postman examples using the agreed shapes.
 
 Please confirm preferences and I'll update the frontend accordingly.
 
+API Endpoint Expected
+
+GET /api/users/me (called via /api/users/me in  
+ src/services/userApi.js:8)
+
+Expected User Data Fields
+
+The Profile page (Profile.jsx) expects the following fields
+in the user object returned from the user-service:
+
+1. firstName (string) - User's first name (Profile.jsx:65)
+2. lastName (string) - User's last name (Profile.jsx:65)
+3. email (string) - User's email address (Profile.jsx:68)
+4. userId (string/number) - Unique user identifier  
+   (Profile.jsx:71)
+5. profileImageURL (string, optional) - URL to profile  
+   image (Profile.jsx:59)
+
+
+    - Falls back to placeholder if not provided
+
+6. type (string, optional) - Account type (Profile.jsx:75)
+
+
+    - Falls back to "User" if not provided
+
+7. active (boolean) - Account status (Profile.jsx:81)
+8. dateJoined (string/date) - Account creation date  
+   (Profile.jsx:89)
+
+
+    - Should be a valid date string
+
+
+Authentication
+
+The request to /api/users/me includes the JWT token from  
+ localStorage (sent via the apiRequest function), so the  
+ user-service needs to:
+
+- Validate the JWT token
+- Extract the user ID from the token
+- Return the corresponding user's data  
+
+
+Additional API (for future use)
+
+There's also a PUT /api/users/profile endpoint defined  
+ (userApi.js:24) for updating user profiles, though it's not
+currently used by the Profile page.

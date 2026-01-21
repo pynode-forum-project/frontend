@@ -1,5 +1,5 @@
-const Login = () => {
-  return <h2>Login Page</h2>
-}
+const ContactAdmin = () => {
+  return <h2>Contact Admin Page</h2>;
+};
 
-export default Login
+export default ContactAdmin;

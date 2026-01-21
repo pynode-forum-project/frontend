@@ -22,7 +22,10 @@ export const router = createBrowserRouter([
       { path: "/users/profile", element: <Profile /> },
 
       // 404
-      { path: "*", element: <div className="container mt-4">404 Not Found</div> },
+      {
+        path: "*",
+        element: <div className="container mt-4">404 Not Found</div>,
+      },
     ],
   },
 ]);
