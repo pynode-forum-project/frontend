@@ -1,7 +1,8 @@
-import { useState, useContext, useEffect } from "react";
+import React from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-
+import { register as apiRegister } from "../services/authApi";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -25,6 +26,13 @@ const Register = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const refs = {
+    firstName: useRef(null),
+    lastName: useRef(null),
+    email: useRef(null),
+    password: useRef(null),
+    confirmPassword: useRef(null),
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -37,6 +45,8 @@ const Register = () => {
     const { firstName, lastName, email, password, confirmPassword } = formData;
     const newFieldErrors = {};
 
+    if (!firstName || !firstName.trim()) newFieldErrors.firstName = "First name is required.";
+    if (!lastName || !lastName.trim()) newFieldErrors.lastName = "Last name is required.";
     if (!email) newFieldErrors.email = "Email is required.";
     if (!password) newFieldErrors.password = "Password is required.";
     if (!confirmPassword)
@@ -60,6 +70,9 @@ const Register = () => {
 
     if (Object.keys(newFieldErrors).length > 0) {
       setFieldErrors(newFieldErrors);
+      // focus first invalid field
+      const firstKey = Object.keys(newFieldErrors)[0];
+      if (firstKey && refs[firstKey] && refs[firstKey].current) refs[firstKey].current.focus();
       return "Please correct the highlighted fields.";
     }
 
@@ -81,18 +94,37 @@ const Register = () => {
 
     try {
       setLoading(true);
+      // Call Gateway -> Auth Service
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+      };
 
-      // mock register success
-      setTimeout(() => {
-        setSuccess(
-          "Registration successful. Please check your email to verify your account."
-        );
+      const res = await apiRegister(payload);
+
+      if (res.ok && res.status === 201) {
+        setSuccess("Registration successful. Please check your email to verify your account.");
         setLoading(false);
+        setTimeout(() => navigate('/users/login', { replace: true }), 1200);
+        return;
+      }
 
-        setTimeout(() => {
-          navigate("/users/login", { replace: true });
-        }, 1500);
-      }, 800);
+      // Handle 4xx user errors and field-level details/errors
+      const details = res.body && (res.body.details || res.body.errors);
+      if (details && typeof details === 'object' && Object.keys(details).length > 0) {
+        setFieldErrors(details);
+        // focus first field with error
+        const firstKey = Object.keys(details)[0];
+        if (firstKey && refs[firstKey] && refs[firstKey].current) refs[firstKey].current.focus();
+        setLoading(false);
+        return;
+      }
+
+      const msg = (res.body && (res.body.error || res.body.message)) || 'Registration failed.';
+      setError(msg);
+      setLoading(false);
     } catch (err) {
       setError("Registration failed. Please try again.");
       setLoading(false);
@@ -102,7 +134,7 @@ const Register = () => {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <h2 className="mb-4 text-center">Register</h2>
+        <h2 className="mb-4">Register</h2>
 
         {error && <div className="alert alert-danger">{error}</div>}
         {success && (
@@ -114,84 +146,84 @@ const Register = () => {
         )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">First Name</label>
-          <input
-            type="text"
-            name="firstName"
-            className="form-control"
-            value={formData.firstName}
-            onChange={handleChange}
-          />
-          {fieldErrors.firstName && (
-            <div className="text-danger small">{fieldErrors.firstName}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label htmlFor="firstName" className="form-label">First Name</label>
+            <input
+              id="firstName"
+              type="text"
+              name="firstName"
+              className="form-control"
+              value={formData.firstName}
+              onChange={handleChange}
+              ref={refs.firstName}
+            />
+            <div className="text-danger small field-error">{fieldErrors.firstName || '\u00A0'}</div>
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Last Name</label>
-          <input
-            type="text"
-            name="lastName"
-            className="form-control"
-            value={formData.lastName}
-            onChange={handleChange}
-          />
-          {fieldErrors.lastName && (
-            <div className="text-danger small">{fieldErrors.lastName}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label htmlFor="lastName" className="form-label">Last Name</label>
+            <input
+              id="lastName"
+              type="text"
+              name="lastName"
+              className="form-control"
+              value={formData.lastName}
+              onChange={handleChange}
+              ref={refs.lastName}
+            />
+            <div className="text-danger small field-error">{fieldErrors.lastName || '\u00A0'}</div>
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          {fieldErrors.email && (
-            <div className="text-danger small">{fieldErrors.email}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              className="form-control"
+              value={formData.email}
+              onChange={handleChange}
+              ref={refs.email}
+            />
+            <div className="text-danger small field-error">{fieldErrors.email || '\u00A0'}</div>
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleChange}
-          />
-          {fieldErrors.password && (
-            <div className="text-danger small">{fieldErrors.password}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              className="form-control"
+              value={formData.password}
+              onChange={handleChange}
+              ref={refs.password}
+            />
+            <div className="text-danger small field-error">{fieldErrors.password || '\u00A0'}</div>
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Confirm Password</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            className="form-control"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-          />
-          {fieldErrors.confirmPassword && (
-            <div className="text-danger small">{fieldErrors.confirmPassword}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              name="confirmPassword"
+              className="form-control"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              ref={refs.confirmPassword}
+            />
+            <div className="text-danger small field-error">{fieldErrors.confirmPassword || '\u00A0'}</div>
+          </div>
 
-        <button
-          type="submit"
-          className="btn btn-primary w-100"
-          disabled={loading}
-        >
-          {loading ? "Registering..." : "Register"}
-        </button>
-      </form>
+          <button
+            type="submit"
+            className="btn btn-primary w-100"
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
         <p className="mt-3 text-center">
           Already have an account?{" "}

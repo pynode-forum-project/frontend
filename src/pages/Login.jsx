@@ -1,8 +1,8 @@
-import { useState, useContext, useEffect } from "react";
+import React from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import "../styles/auth.css";
-
+import { login as apiLogin } from "../services/authApi";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,6 +23,8 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -67,17 +69,37 @@ const Login = () => {
 
     try {
       setLoading(true);
+      // Call Gateway -> Auth Service
+      const res = await apiLogin({ email: formData.email, password: formData.password });
 
-      // !!! TODO: integrate with Gateway later
-      // const res = await fetch("http://localhost:8080/users/login", {...})
-
-      // mock login success
-      setTimeout(() => {
-        login("mock-token"); // !!! only for demo purposes
+      if (res.ok && res.body && res.body.token) {
+        // store token via AuthContext (AuthContext.login stores token in localStorage)
+        login(res.body.token);
         setLoading(false);
-      }, 800);
+        navigate('/home', { replace: true });
+        return;
+      }
+
+      // handle error shapes: prefer field-level details/errors over global message
+      const details = res.body && (res.body.details || res.body.errors);
+      if (details && typeof details === 'object' && Object.keys(details).length > 0) {
+        const mapped = {};
+        if (details.email) mapped.email = details.email;
+        if (details.password) mapped.password = details.password;
+        setFieldErrors(mapped);
+        // focus first field with error
+        const firstKey = Object.keys(mapped)[0];
+        if (firstKey === 'email') emailRef.current?.focus();
+        else if (firstKey === 'password') passwordRef.current?.focus();
+        setLoading(false);
+        return;
+      }
+
+      const msg = (res.body && (res.body.error || res.body.message)) || 'Invalid email or password.';
+      setError(msg);
+      setLoading(false);
     } catch (err) {
-      setError("Invalid email or password.");
+      setError("Unexpected error while logging in.");
       setLoading(false);
     }
   };
@@ -85,48 +107,52 @@ const Login = () => {
   return (
     <div className="auth-wrapper auth-center">
       <div className="auth-card">
-        <h2 className="mb-4 text-center">Login</h2>
+        <h2 className="mb-4">Login</h2>
 
         {error && <div className="alert alert-danger">{error}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label className="form-label">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            value={formData.email}
-            onChange={handleChange}
-            autoComplete="email"
-          />
-          {fieldErrors.email && (
-            <div className="text-danger small">{fieldErrors.email}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              className="form-control"
+              value={formData.email}
+              onChange={handleChange}
+              autoComplete="email"
+              ref={emailRef}
+            />
+            {fieldErrors.email && (
+              <div className="text-danger small">{fieldErrors.email}</div>
+            )}
+          </div>
 
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleChange}
-            autoComplete="current-password"
-          />
-          {fieldErrors.password && (
-            <div className="text-danger small">{fieldErrors.password}</div>
-          )}
-        </div>
+          <div className="mb-3">
+            <label htmlFor="password" className="form-label">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              className="form-control"
+              value={formData.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+              ref={passwordRef}
+            />
+            {fieldErrors.password && (
+              <div className="text-danger small">{fieldErrors.password}</div>
+            )}
+          </div>
 
-        <button
-          type="submit"
-          className="btn btn-primary w-100"
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
+          <button
+            type="submit"
+            className="btn btn-primary w-100"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
         </form>
 
         <div className="mt-3 text-center">
