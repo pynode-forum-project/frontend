@@ -139,3 +139,56 @@ If you want, I can produce an OpenAPI fragment or Postman examples next.
 ***
 - Login example:
 
+	fetch('/api/auth/login', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ email, password })
+	})
+
+## 10) Get Current User (GET /api/users/me)
+
+- Description: fetch the currently authenticated user's profile information.
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Request: no body required; authentication is via header.
+
+- Success response (200 OK):
+
+	{
+		"userId": "<uuid>",
+		"firstName": "string",
+		"lastName": "string",
+		"email": "string",
+		"profileImageURL": "string (URL)",  // optional, defaults to placeholder if null
+		"type": "string",                   // e.g., "User", "Premium", "Admin"
+		"active": boolean,
+		"dateJoined": "string (ISO 8601 date)"
+	}
+
+- Failure responses:
+	- 401 Unauthorized
+		{ "message": "Invalid or expired token" }
+	- 404 Not Found
+		{ "message": "User not found" }
+
+- Frontend expectations:
+	- This endpoint is called automatically after login and when refreshing user data on the Profile page.
+	- The frontend expects all fields listed above to be present in the response.
+	- If `profileImageURL` is null or empty, frontend will use a placeholder image.
+	- The `dateJoined` field should be in ISO 8601 format (e.g., "2024-01-15T10:30:00Z") for proper date parsing.
+
+## 11) Notes / Questions for backend
+
+- Do auth endpoints live under `/api/auth` or another prefix? Please confirm.
+- Does the backend restrict emails to `.com`? If not, frontend will loosen validation to accept any valid email.
+- Will backend return JWT `token` in the login response, or use HttpOnly cookies? Which method should frontend implement?
+- What shape are validation errors returned in (field map vs array)? Provide an example.
+- User service endpoint `/api/users/me` must validate JWT token and return user data as specified in section 10.
+
+---
+
+If you'd like, I can also:
+- add inline error handling examples in `src/pages/Register.jsx` and `src/pages/Login.jsx`, or
+- create Postman examples using the agreed shapes.
+
+Please confirm preferences and I'll update the frontend accordingly.
+
