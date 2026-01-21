@@ -137,5 +137,34 @@ fetch('/api/auth/login', {
 If you want, I can produce an OpenAPI fragment or Postman examples next.
 
 ***
-- Login example:
 
+## 12) Get Current User (GET /api/users/me)
+
+- Description: fetch the currently authenticated user's profile information.
+- Authentication: requires valid JWT token in `Authorization: Bearer <token>` header.
+- Request: no body required; authentication is via header.
+
+- Success response (200 OK):
+
+```json
+{
+  "userId": "<uuid>",
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string",
+  "profileImageURL": "string (URL)",
+  "type": "string",
+  "active": boolean,
+  "dateJoined": "string (ISO 8601 date)"
+}
+```
+
+- Failure responses:
+  - 401 Unauthorized: `{ "message": "Invalid or expired token" }`
+  - 404 Not Found: `{ "message": "User not found" }`
+
+- Frontend expectations:
+  - This endpoint is called automatically after login and when refreshing user data on the Profile page.
+  - The frontend expects all fields listed above to be present in the response.
+  - If `profileImageURL` is null or empty, frontend will use a placeholder image.
+  - The `dateJoined` field should be in ISO 8601 format (e.g., "2024-01-15T10:30:00Z") for proper date parsing.
