@@ -53,4 +53,24 @@ describe('Login page', () => {
     expect(apiLogin).toHaveBeenCalledTimes(2)
     expect(authLogin).toHaveBeenCalledWith('dev-token')
   })
+
+  it('handles backend `error` string and `errors` object shapes', async () => {
+    const authLogin = vi.fn()
+    // backend returns error string
+    apiLogin.mockResolvedValueOnce({ ok: false, status: 401, body: { error: 'Invalid credentials' } })
+
+    renderWithAuth(<Login />, { providerProps: { isAuthenticated: false, login: authLogin } })
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(/Email/i), 'bad@example.com')
+    await user.type(screen.getByLabelText(/Password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /Login/i }))
+
+    expect(await screen.findByText(/Invalid credentials/i)).toBeInTheDocument()
+
+    // backend returns `errors` object
+    apiLogin.mockResolvedValueOnce({ ok: false, status: 400, body: { message: 'Invalid', errors: { password: 'Too short' } } })
+    await user.click(screen.getByRole('button', { name: /Login/i }))
+    expect(await screen.findByText(/Too short/i)).toBeInTheDocument()
+  })
 })

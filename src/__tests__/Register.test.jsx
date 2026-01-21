@@ -55,6 +55,11 @@ describe('Register page', () => {
     // Field-level error should be displayed
     expect(await screen.findByText(/Invalid email/i)).toBeInTheDocument()
 
+    // Also accept backend that returns `errors` instead of `details`
+    apiRegister.mockResolvedValueOnce({ ok: false, status: 400, body: { message: 'Invalid input', errors: { email: 'Still invalid' } } })
+    await user.click(screen.getByRole('button', { name: /Register/i }))
+    expect(await screen.findByText(/Still invalid/i)).toBeInTheDocument()
+
     // Now mock a successful registration
     apiRegister.mockResolvedValueOnce({ ok: true, status: 201, body: { message: 'Registered' } })
 
@@ -63,9 +68,34 @@ describe('Register page', () => {
     await user.type(screen.getByLabelText(/Email/i), 'test@example.com')
     await user.click(screen.getByRole('button', { name: /Register/i }))
 
-    expect(apiRegister).toHaveBeenCalledTimes(2)
+    expect(apiRegister).toHaveBeenCalledTimes(3)
 
     // Success message should appear
     expect(await screen.findByText(/Registration successful/i)).toBeInTheDocument()
+  })
+
+  it('client-side validates required first and last name and prevents API call', async () => {
+    render(
+      <MemoryRouter>
+        <MockAuthProvider>
+          <Register />
+        </MockAuthProvider>
+      </MemoryRouter>
+    )
+
+    const user = userEvent.setup()
+    // leave first and last name empty
+    await user.type(screen.getByLabelText(/Email/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/^Password$/i), 'password123')
+    await user.type(screen.getByLabelText(/Confirm Password/i), 'password123')
+
+    await user.click(screen.getByRole('button', { name: /Register/i }))
+
+    // API should not be called due to client-side validation
+    expect(apiRegister).not.toHaveBeenCalled()
+
+    // field-level client errors should be visible
+    expect(await screen.findByText(/First name is required/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Last name is required/i)).toBeInTheDocument()
   })
 })

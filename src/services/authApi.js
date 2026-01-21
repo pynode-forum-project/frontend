@@ -10,6 +10,34 @@ async function safeJson(res) {
   }
 }
 
+function normalizeBody(body) {
+  if (!body || typeof body !== 'object') return body;
+
+  // normalize `errors` -> `details`
+  if (body.errors && !body.details && typeof body.errors === 'object') {
+    body.details = body.errors;
+    delete body.errors;
+  }
+
+  // normalize `error` (string) -> `message`
+  if (body.error && !body.message) {
+    body.message = body.error;
+    // keep `details` if present
+  }
+
+  // prune details entries that are falsy/undefined
+  if (body.details && typeof body.details === 'object') {
+    const clean = {};
+    Object.keys(body.details).forEach((k) => {
+      const v = body.details[k];
+      if (v !== undefined && v !== null && v !== '') clean[k] = v;
+    });
+    body.details = Object.keys(clean).length ? clean : undefined;
+  }
+
+  return body;
+}
+
 // small helper to simulate network latency in mock mode
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -30,7 +58,7 @@ export const login = async (data) => {
     credentials: 'include'
   });
   const body = await safeJson(res);
-  return { ok: res.ok, status: res.status, body };
+  return { ok: res.ok, status: res.status, body: normalizeBody(body) };
 };
 
 export const register = async (data) => {
@@ -59,5 +87,5 @@ export const register = async (data) => {
     credentials: 'include'
   });
   const body = await safeJson(res);
-  return { ok: res.ok, status: res.status, body };
+  return { ok: res.ok, status: res.status, body: normalizeBody(body) };
 };

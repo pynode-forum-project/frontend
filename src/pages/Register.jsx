@@ -111,12 +111,15 @@ const Register = () => {
         return;
       }
 
-      // Handle 4xx user errors and field-level details
-      if (res.body && res.body.details && typeof res.body.details === 'object') {
-        setFieldErrors(res.body.details);
+      // Handle 4xx user errors and field-level details/errors
+      const details = res.body && (res.body.details || res.body.errors);
+      if (details && typeof details === 'object' && Object.keys(details).length > 0) {
+        setFieldErrors(details);
         // focus first field with error
-        const firstKey = Object.keys(res.body.details)[0];
+        const firstKey = Object.keys(details)[0];
         if (firstKey && refs[firstKey] && refs[firstKey].current) refs[firstKey].current.focus();
+        setLoading(false);
+        return;
       }
 
       const msg = (res.body && (res.body.error || res.body.message)) || 'Registration failed.';

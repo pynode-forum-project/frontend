@@ -80,10 +80,9 @@ const Login = () => {
         return;
       }
 
-      // handle error shapes
-      // map field-level details if provided
-      if (res.body && res.body.details && typeof res.body.details === 'object') {
-        const details = res.body.details;
+      // handle error shapes: prefer field-level details/errors over global message
+      const details = res.body && (res.body.details || res.body.errors);
+      if (details && typeof details === 'object' && Object.keys(details).length > 0) {
         const mapped = {};
         if (details.email) mapped.email = details.email;
         if (details.password) mapped.password = details.password;
@@ -92,6 +91,8 @@ const Login = () => {
         const firstKey = Object.keys(mapped)[0];
         if (firstKey === 'email') emailRef.current?.focus();
         else if (firstKey === 'password') passwordRef.current?.focus();
+        setLoading(false);
+        return;
       }
 
       const msg = (res.body && (res.body.error || res.body.message)) || 'Invalid email or password.';
