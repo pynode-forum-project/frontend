@@ -1,144 +1,142 @@
-# Auth API Contract — Frontend ↔ Backend
+This file consolidates FP-20 notes and the existing auth contract drafts into a single, actionable reference for frontend, gateway, and backend teams.
 
-Purpose: document the authentication-related endpoints, request/response shapes, validation rules, and client-side expectations so frontend and backend stay aligned.
+1) Overview (FP-20 context)
+- FP-20 implemented frontend Register/Login UX, validation, styling, an `authApi` wrapper with a `VITE_MOCK_AUTH` mock toggle, and Vitest tests. The frontend consumes backend `details` maps for field errors and focuses the first invalid field.
 
-## Base URL
+2) Gateway mapping
+- Frontend calls: `/api/auth/*`.
+- Suggested proxy mappings:
+  - `POST /api/auth/register` -> `POST /auth/register` on auth-service
+  - `POST /api/auth/login` -> `POST /auth/login` on auth-service
 
-- Frontend expects auth endpoints under: `/api/auth` (example: `/api/auth/register`, `/api/auth/login`). If your gateway prefixes differ, please share the final paths.
+3) Register — POST /api/auth/register
+Purpose: create a new user and (optionally) send verification email.
 
-## 1) Register (POST /api/auth/register)
+Request (JSON):
 
-- Description: create a new user and send a verification email.
-- Request body (JSON):
+```json
+{
+  "firstName": "string",
+  "lastName": "string",
+  "email": "string",
+  "password": "string",
+  "confirmPassword": "string"
+}
+```
 
-	{
-	"firstName": "string",
-	"lastName": "string",
-	"email": "string",   // frontend validates general valid email addresses
-	"password": "string",
-	"confirmPassword": "string"
-	}
+Frontend validation (also expected server-side):
+- `firstName`: required, trimmed, max ~50 chars (current frontend requires this).
+- `lastName`: required, trimmed, max ~50 chars (current frontend requires this).
+- `email`: required, valid-looking email.
+- `password`: required, minimum 8 characters.
+- `confirmPassword`: required and must equal `password`.
 
-- Frontend validation rules (must be enforced server-side as well):
-	- `email`: required, valid email format; frontend validates general valid email addresses and backend SHOULD accept any valid email.
-	- `password`: required, minimum 8 characters.
-	- `confirmPassword`: required and must exactly match `password`.
-	- `firstName` / `lastName`: optional but prefer trimming and max length (e.g. 50 chars).
+Success (recommended):
+- HTTP 201 Created
+```json
+{ "message": "Registration successful. Verification email sent.", "userId": "<uuid>" }
+```
 
-- Success response (201 Created):
+Failure examples:
+- 400 Bad Request (validation):
+```json
+{ "message": "Validation failed", "details": { "email": "Email is required." } }
+```
+- 409 Conflict (duplicate email):
+```json
+{ "message": "Email already exists", "details": { "email": "This email is already registered" } }
+```
 
-	{
-		"message": "Registration successful. Verification email sent.",
-		"userId": "<uuid>" // optional
-	}
+4) Login — POST /api/auth/login
+Purpose: authenticate a user and establish a session.
 
-- Failure responses (examples):
-	- 400 Bad Request — validation errors
-		{
-			"message": "Validation failed",
-			"details": {
-				"email": "Invalid email",
-				"password": "Too short",
-				"firstName": "Too long"
-			}
-		}
-	- 409 Conflict — email already exists
-		{ "message": "Email already in use" }
+Request (JSON):
+```json
+{ "email": "string", "password": "string" }
+```
 
-## 2) Login (POST /api/auth/login)
+Success responses (choose one approach and document it):
+- Token-in-body (simple): HTTP 200
+```json
+{ "token": "<jwt>", "user": { "id": "<uuid>", "email": "user@example.com", "firstName": "...", "lastName": "..." } }
+```
+- HttpOnly cookie (recommended for security): HTTP 200 with `Set-Cookie: token=<jwt>; HttpOnly; Secure; SameSite=Strict` and a small JSON body `{ "message": "Logged in" }`. Client should call subsequent requests with `credentials: 'include'`.
 
-- Description: authenticate a user and return a session token (JWT) or set a cookie.
-- Request body (JSON):
+Failure examples:
+- 401 Unauthorized
+```json
+{ "message": "Invalid credentials" }
+```
+- 403 Forbidden (unverified email)
+```json
+{ "message": "Email not verified" }
+```
 
-	{
-		"email": "string",
-		"password": "string"
-	}
+5) Other endpoints (optional)
+- Verify: `GET /api/auth/verify?token=...` — 200 OK with message/redirect.
+- Password reset flow: `POST /api/auth/forgot` and `POST /api/auth/reset` (use `details` for validation errors).
 
-- Frontend expectations:
-	- Backend will return a JSON response containing either a `token` (JWT) or user object and the frontend will store token in local storage / context.
-	- If using HttpOnly cookies, frontend will rely on cookie presence and not store token manually.
+6) Error format (recommended)
+Prefer a stable shape so frontend can display inline messages.
 
-- Success response (200 OK):
+- Field-level (preferred for 400/409):
+```json
+{ "message": "Validation failed", "details": { "email": "Invalid email", "password": "Too short" } }
+```
 
-	{
-		"token": "<jwt-token>",
-		"user": {
-			"id": "<uuid>",
-			"email": "user@example.com",
-			"firstName": "...",
-			"lastName": "..."
-		}
-	}
+- General error:
+```json
+{ "message": "Email already in use" }
+```
 
-- Failure responses:
-	- 401 Unauthorized
-		{ "message": "Invalid credentials" }
-	- 403 Forbidden (unverified email)
-		{ "message": "Email not verified" }
+Frontend behavior: when `details` is present, map keys to inputs and focus the first invalid field; otherwise show global message.
 
-## 3) Verify email (GET /api/auth/verify?token=...)
+Note: to ease backend transitions, the frontend `authApi` wrapper will accept either a `details` object or an `errors` object and normalize it to `details` internally. However, the canonical shape we recommend and prefer is the top-level `message` plus `details` map.
 
-- Description: endpoint the user follows from email to verify their account.
-- Success: 200 OK with message and redirect instructions.
+7) Validation rules (summary)
+- `email`: required, valid format.
+- `password`: required, min 8 chars.
+- `confirmPassword`: must match `password`.
+- `firstName`/`lastName`: required by current frontend; trim and enforce max length.
 
-## 4) Password reset (optional)
+8) Transport & CORS
+- Responses must be JSON with `Content-Type: application/json`.
+- If cookies are used, ensure CORS + credentials settings allow the frontend host. For local dev, use `VITE_MOCK_AUTH=true` to mock.
 
-- Flow: request reset -> backend sends email with token -> frontend hits reset endpoint with new password.
-- Reset request (POST /api/auth/forgot)
-	- body: `{ "email": "..." }`
-	- response: 200 OK (even if email not found, to avoid user enumeration).
-- Reset confirm (POST /api/auth/reset)
-	- body: `{ "token": "...", "password": "...", "confirmPassword": "..." }`
-	- validation: password min length and confirm match.
+9) Examples (fetch)
+- Register (cookie-aware):
+```js
+fetch('/api/auth/register', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ firstName, lastName, email, password, confirmPassword }),
+  credentials: 'include'
+})
+```
 
-## 5) Common validation rules (summary)
+- Login:
+```js
+fetch('/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password }),
+  credentials: 'include'
+})
+```
 
-- `email`: required, valid email format. Frontend validates general valid email addresses; backend should accept any valid TLD.
-- `password`: required, min 8 chars. Consider adding complexity rules (uppercase, number) if backend requires them; keep frontend consistent.
-- `confirmPassword`: required and must equal `password` for register and reset.
-- Fields should be trimmed of leading/trailing whitespace.
+10) FP-20 frontend notes
+- `authApi` returns `{ ok, status, body }` and supports `VITE_MOCK_AUTH` for local dev and CI.
+- Tests: `frontend/src/__tests__/Register.test.jsx` and `Login.test.jsx` exercise validation, error mapping, and success behavior.
 
-## 6) Error format (recommended)
+11) Action items / Questions for backend
+1. Confirm gateway proxy paths for auth endpoints (`/api/auth/*`).
+2. Decide session approach (token in JSON vs HttpOnly cookie).
+3. Confirm error format (`details` object preferred) and field names.
+4. Share exact password policy if stronger than min-8 so frontend can match.
 
-- For consistency, frontend expects errors in one of these shapes:
+If you want, I can produce an OpenAPI fragment or Postman examples next.
 
-	- Field-level errors (400):
-
-		{
-			"errors": {
-				"email": "Invalid email",
-				"password": "Password too short"
-			}
-		}
-
-	- General error message:
-
-		{ "message": "Email already in use" }
-
-Please keep error keys predictable so the frontend can show inline messages.
-
-## 7) Authentication in requests
-
-- Protected endpoints used by frontend should accept an `Authorization: Bearer <token>` header when not relying on cookies.
-- If the backend uses HttpOnly cookies, note that frontend fetch calls should include `credentials: 'include'`.
-
-## 8) Frontend behavior and expectations
-
-- On successful registration: frontend shows a success message and navigates to login.
-- On registration validation errors: show inline field errors (e.g. under the input) and an alert for general errors.
-- On login success: frontend stores `token` in `localStorage` (or relies on cookie) and sets auth context.
-
-## 9) Example requests (fetch)
-
-- Register example:
-
-	fetch('/api/auth/register', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ firstName, lastName, email, password, confirmPassword })
-	})
-
+***
 - Login example:
 
 	fetch('/api/auth/login', {

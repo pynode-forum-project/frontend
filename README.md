@@ -14,3 +14,11 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Development environment variables
+
+This project supports a small set of Vite environment variables used during local development. Copy `.env.example` to `.env.local` or `.env` to override defaults.
+
+- `VITE_MOCK_AUTH` (default: `true` in `.env.example`) — when set to `true`, the frontend will not call the real Gateway for auth requests but will instead return mocked responses for login/register. Use this during UI work while the backend endpoints are not available. Remember to set this to `false` when you want to test against the real Gateway.
+
+See `src/docs/auth-contract.md` for the frontend's expected auth API contract (request/response examples) so you can align with backend implementers.
