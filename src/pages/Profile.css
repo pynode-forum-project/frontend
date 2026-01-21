@@ -220,6 +220,130 @@
   margin: 0;
 }
 
+/* Posts List */
+.posts-list,
+.drafts-list,
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.post-item,
+.draft-item,
+.history-item {
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.post-item:hover,
+.draft-item:hover,
+.history-item:hover {
+  background-color: #f5f5f5;
+  border-color: #ddd;
+}
+
+.post-title,
+.draft-title,
+.history-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.post-title h6,
+.draft-title h6,
+.history-title h6 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1a1a2e;
+  flex: 1;
+  word-break: break-word;
+}
+
+.reply-count {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.draft-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: #ffc107;
+  color: #333;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.post-content,
+.draft-content,
+.history-content {
+  color: #666;
+  margin: 8px 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.post-date,
+.draft-date,
+.history-date {
+  color: #999;
+  font-size: 0.85rem;
+  display: block;
+  margin-top: 8px;
+}
+
+.history-meta {
+  display: flex;
+  gap: 15px;
+  margin-top: 8px;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.view-count {
+  color: #007bff;
+  font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 20px 0;
+  font-style: italic;
+}
+
+/* Loading Section */
+.loading-section {
+  text-align: center;
+  padding: 20px 0;
+  color: #666;
+}
+
+/* Alert Styles */
+.alert-danger {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px 20px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .profile-info {
