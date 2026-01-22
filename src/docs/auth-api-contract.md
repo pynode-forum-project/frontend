@@ -281,7 +281,12 @@ status (string, optional) - Filter by status
         "status": "published",
         "isArchived": false,
         "dateCreated": "2026-01-15T10:30:00Z",
-        "dateModified": "2026-01-16T14:20:00Z"
+        "dateModified": "2026-01-16T14:20:00Z",
+        "author": {
+          "firstName": "John",
+          "lastName": "Doe",
+          "profileImageURL": "https://s3.example.com/profile/user-123.jpg"
+        }
       }
     ],
     "pagination": {
@@ -296,6 +301,18 @@ status (string, optional) - Filter by status
   "timestamp": "2026-01-21T12:00:00Z"
 }
 ```
+
+**Frontend Requirements:**
+- Each post object **MUST** include:
+  - `userId` (string) - Post creator's user ID (used for queries, filtering, and linking to author profile)
+  - `author` (object) - Author display information containing:
+    - `firstName` (string) - Author's first name
+    - `lastName` (string) - Author's last name
+    - `profileImageURL` (string, nullable) - Author's profile image URL (null if not set)
+- **Database Design Note:** The Post collection stores redundant author information (firstName, lastName, profileImageURL) directly in the post document to avoid additional queries. This is a "space for time" optimization strategy. The `author` data should be populated when the post is created/updated, and should be kept in sync when the user updates their profile.
+- The frontend will display: **Title**, **Author Name** (firstName + lastName), **Summary** (truncated content), and **Date**
+- If `profileImageURL` is null or empty, frontend will use a placeholder image
+- The `content` field will be truncated to ~150 characters for the summary display
 
 **Examples:**
 
@@ -336,6 +353,11 @@ fetch("/api/posts?sortBy=dateModified&sortOrder=desc");
     "status": "published",
     "dateCreated": "2026-01-15T10:30:00Z",
     "dateModified": "2026-01-16T14:20:00Z",
+    "author": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "profileImageURL": "https://s3.example.com/profile/user-123.jpg"
+    },
     "replies": [
       {
         "replyId": "550e8400-e29b-41d4-a716-446655440001",
@@ -348,6 +370,12 @@ fetch("/api/posts?sortBy=dateModified&sortOrder=desc");
   "timestamp": "2026-01-21T12:00:00Z"
 }
 ```
+
+**Frontend Requirements:**
+- The post object **MUST** include:
+  - `userId` (string) - Post creator's user ID
+  - `author` (object) - Author display information with the same structure as in List Posts (firstName, lastName, profileImageURL)
+- This is required for displaying the post author information on the detail page
 
 **Failure Examples:**
 
@@ -588,6 +616,8 @@ limit (integer, default: 3, max: 10)
 
 ---
 
+---
+
 # HISTORY SERVICE
 
 ## 1) Record Post View — POST /api/history
@@ -808,13 +838,14 @@ async function clearAllHistory(token) {
 
 ## Pages to Build
 
-- [ ] **Posts Listing Page**
+- [x] **Posts Listing Page**
 
-  - [ ] Fetch posts with pagination
+  - [x] Fetch posts with pagination (GET /api/posts)
   - [ ] Sort by date (asc/desc) dropdown
   - [ ] Filter by creator input
-  - [ ] Display: title, creator, date
-  - [ ] Pagination controls (next/prev)
+  - [x] Display: title, author (firstName + lastName), summary (truncated content), date
+  - [ ] Pagination controls (next/prev) or "Load More" button
+  - [x] Card layout design (Title, Author, Summary)
 
 - [ ] **Post Detail Page**
 
@@ -852,5 +883,94 @@ async function clearAllHistory(token) {
 - [ ] Form validation
 - [ ] File upload handling
 - [ ] Graceful degradation if history service fails
+
+---
+
+# BACKEND IMPLEMENTATION NOTES
+
+## Post Service Database Schema Update Required
+
+To support the frontend Post List page requirements, the Post Service (`post-reply-service`) **MUST** update the Post model to include redundant author information directly in the post document.
+
+### Database Design Philosophy
+
+**Space for Time Optimization:** The Post collection stores redundant user information (firstName, lastName, profileImageURL) to avoid additional queries to the User Service. This improves query performance at the cost of storage space.
+
+### Required Post Model Schema Update
+
+The Post model (`post-reply-service/src/models/Post.js`) **MUST** be updated to include:
+
+```javascript
+const postSchema = new mongoose.Schema({
+  postId: String,
+  userId: String,  // Author's user ID (for queries and linking)
+  
+  // Redundant author information (stored for performance)
+  authorFirstName: String,      // Author's first name at time of post creation/update
+  authorLastName: String,        // Author's last name at time of post creation/update
+  authorProfileImageURL: String, // Author's profile image URL at time of post creation/update
+  
+  title: String,
+  content: String,
+  images: [String],
+  attachments: [String],
+  status: String,
+  dateCreated: Date,
+  dateModified: Date,
+  // ... other fields
+});
+```
+
+### API Response Transformation
+
+When returning posts via `GET /api/posts` and `GET /api/posts/:postId`, transform the flat fields into an `author` object:
+
+```javascript
+// In post-reply-service controllers
+const posts = await Post.find(statusFilter).sort(sortObj).skip(skip).limit(limit);
+
+// Transform to include author object
+const transformedPosts = posts.map(post => ({
+  postId: post.postId,
+  userId: post.userId,
+  title: post.title,
+  content: post.content,
+  // ... other fields
+  author: {
+    firstName: post.authorFirstName,
+    lastName: post.authorLastName,
+    profileImageURL: post.authorProfileImageURL
+  }
+}));
+```
+
+### Data Synchronization Strategy
+
+When a user updates their profile (firstName, lastName, profileImageURL), the system should:
+
+1. **Option 1: Update all posts (Recommended for small datasets)**
+   - Update all posts created by that user
+   - Ensures data consistency
+   - May be slow for users with many posts
+
+2. **Option 2: Lazy update (Recommended for large datasets)**
+   - Update posts only when they are accessed
+   - Store a `authorDataVersion` or `authorUpdatedAt` timestamp
+   - Compare with user's `profileUpdatedAt` to determine if update is needed
+
+3. **Option 3: Accept eventual consistency**
+   - Don't update existing posts
+   - Only new posts will have updated author information
+   - Acceptable if showing historical author information is desired
+
+### Implementation Checklist
+
+- [ ] Update Post model schema to include `authorFirstName`, `authorLastName`, `authorProfileImageURL`
+- [ ] Update `createPost` controller to populate author fields from JWT token or User Service
+- [ ] Update `updatePost` controller to refresh author fields if needed
+- [ ] Update `listPosts` controller to transform flat fields into `author` object
+- [ ] Update `getPostById` controller to transform flat fields into `author` object
+- [ ] Implement data synchronization strategy when user updates profile
+- [ ] Add database migration script for existing posts (if any)
 
 ---
