@@ -4,13 +4,14 @@
  * Supports mock mode for testing via VITE_MOCK_DATA env var
  */
 
-import { mockTopPosts, mockDrafts } from "./mockData";
-
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // Check for mock data mode
 const isMockDataEnabled = () => {
-  return import.meta.env.VITE_MOCK_DATA === "true" || import.meta.env.VITE_MOCK_DATA === true;
+  return (
+    import.meta.env.VITE_MOCK_DATA === "true" ||
+    import.meta.env.VITE_MOCK_DATA === true
+  );
 };
 
 const getAuthHeader = () => {
