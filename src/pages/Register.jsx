@@ -100,11 +100,13 @@ const Register = () => {
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
+          confirmPassword: formData.confirmPassword,
       };
 
       const res = await apiRegister(payload);
 
-      if (res.ok && res.status === 201) {
+      // Accept either 201 Created or 200 OK as a successful registration
+      if (res.ok && (res.status === 201 || res.status === 200)) {
         setSuccess("Registration successful. Please check your email to verify your account.");
         setLoading(false);
         setTimeout(() => navigate('/users/login', { replace: true }), 1200);

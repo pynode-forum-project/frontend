@@ -134,8 +134,4 @@ fetch('/api/auth/login', {
 3. Confirm error format (`details` object preferred) and field names.
 4. Share exact password policy if stronger than min-8 so frontend can match.
 
-If you want, I can produce an OpenAPI fragment or Postman examples next.
-
-***
-- Login example:
 

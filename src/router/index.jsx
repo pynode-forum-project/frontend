@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import Contact from "../pages/Contact";
+import History from "../pages/History";
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
 
       // later: wrap these with ProtectedRoute
       { path: "/home", element: <Home /> },
+      { path: "/history", element: <History /> },
       { path: "/users/profile", element: <Profile /> },
 
       // 404

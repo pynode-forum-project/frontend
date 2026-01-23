@@ -72,9 +72,15 @@ const Login = () => {
       // Call Gateway -> Auth Service
       const res = await apiLogin({ email: formData.email, password: formData.password });
 
-      if (res.ok && res.body && res.body.token) {
-        // store token via AuthContext (AuthContext.login stores token in localStorage)
-        login(res.body.token);
+      // Accept both token-based and HttpOnly-cookie session logins.
+      if (res.ok) {
+        if (res.body && res.body.token) {
+          // token-based login
+          login(res.body.token);
+        } else {
+          // cookie-based login: server set HttpOnly session cookie
+          login();
+        }
         setLoading(false);
         navigate('/home', { replace: true });
         return;

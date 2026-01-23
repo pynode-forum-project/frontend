@@ -11,7 +11,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (token) => {
-    localStorage.setItem("token", token);
+    // Only persist a token when one is provided (support HttpOnly cookie sessions)
+    if (token) {
+      localStorage.setItem("token", token);
+    }
     setIsAuthenticated(true);
   };
 
