@@ -43,6 +43,11 @@ const Navbar = () => {
                 </Link>
               </li>
               <li>
+                <Link className="nav-link" to="/history">
+                  History
+                </Link>
+              </li>
+              <li>
                 <Link className="nav-link" to="/users/profile">
                   Profile
                 </Link>

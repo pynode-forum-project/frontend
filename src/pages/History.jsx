@@ -10,7 +10,7 @@ const History = () => {
     let mounted = true;
     const fetchHistory = async () => {
       try {
-        const res = await fetch('/api/history', { credentials: 'include' });
+        const res = await (await import('../services/request')).apiFetch('/api/history');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const body = await res.json();
         if (mounted) setPosts(body.data?.posts || body.data || []);

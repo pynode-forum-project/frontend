@@ -74,13 +74,10 @@ const Login = () => {
 
       // Accept both token-based and HttpOnly-cookie session logins.
       if (res.ok) {
-        if (res.body && res.body.token) {
-          // token-based login
-          login(res.body.token);
-        } else {
-          // cookie-based login: server set HttpOnly session cookie
-          login();
-        }
+        // Pass token and/or user to context so both token and user are persisted
+        const token = res.body && res.body.token;
+        const user = res.body && res.body.user;
+        login(token, user);
         setLoading(false);
         navigate('/home', { replace: true });
         return;
