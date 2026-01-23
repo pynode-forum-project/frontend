@@ -6,6 +6,9 @@ import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import Contact from "../pages/Contact";
 import History from "../pages/History";
+import Message from "../pages/Message";
+import PostList from "../pages/PostList";
+import ProtectedRoute from "../routes/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -18,10 +21,17 @@ export const router = createBrowserRouter([
       { path: "/users/register", element: <Register /> },
       { path: "/contact", element: <Contact /> },
 
-      // later: wrap these with ProtectedRoute
-      { path: "/home", element: <Home /> },
-      { path: "/history", element: <History /> },
-      { path: "/users/profile", element: <Profile /> },
+
+      // Protected routes
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { path: "/home", element: <Home /> },
+          { path: "/posts", element: <PostList /> },
+          { path: "/users/profile", element: <Profile /> },
+          { path: "/messages", element: <Message /> },
+        ],
+      },
 
       // 404
       { path: "*", element: <div className="container mt-4">404 Not Found</div> },
