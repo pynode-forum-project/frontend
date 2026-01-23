@@ -53,6 +53,11 @@ const Navbar = () => {
                 </Link>
               </li>
               <li>
+                <Link className="nav-link" to="/messages">
+                  Messages
+                </Link>
+              </li>
+              <li>
                 <button className="btn-logout" onClick={handleLogout}>
                   Logout
                 </button>

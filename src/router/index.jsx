@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import Contact from "../pages/Contact";
+import Message from "../pages/Message";
 import PostList from "../pages/PostList";
 import ProtectedRoute from "../routes/ProtectedRoute";
 
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { path: "/users/register", element: <Register /> },
       { path: "/contact", element: <Contact /> },
 
+
       // Protected routes
       {
         element: <ProtectedRoute />,
@@ -26,6 +28,7 @@ export const router = createBrowserRouter([
           { path: "/home", element: <Home /> },
           { path: "/posts", element: <PostList /> },
           { path: "/users/profile", element: <Profile /> },
+          { path: "/messages", element: <Message /> },
         ],
       },
 
