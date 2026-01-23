@@ -7,8 +7,8 @@ const PostList = ({ posts = [] }) => {
 
   return (
     <div className="post-list">
-      {posts.map((p) => (
-        <article key={p.postId || p.id} className="post-item">
+      {posts.map((p, index) => (
+        <article key={p.postId || p.id || index} className="post-item">
           <h3 className="post-title">{p.title || 'Untitled'}</h3>
           <div className="post-meta">
             <span className="post-author">{p.userFirstName || p.userId || 'Unknown'}</span>
