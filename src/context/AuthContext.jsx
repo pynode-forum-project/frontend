@@ -5,7 +5,15 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,8 +38,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (token) => {
-    localStorage.setItem("token", token);
+  const login = (token, userObj) => {
+    // Persist token when provided (support token-in-body login)
+    if (token) {
+      localStorage.setItem("token", token);
+    }
+
+    // Persist user when provided
+    if (userObj) {
+      try {
+        localStorage.setItem('user', JSON.stringify(userObj));
+      } catch (e) {}
+      setUser(userObj);
+    }
+
     setIsAuthenticated(true);
 
     // Fetch user data after login
@@ -47,6 +67,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem('user');
     setIsAuthenticated(false);
     setUser(null);
   };

@@ -1,5 +1,7 @@
 const GATEWAY_BASE = "/api/auth";
 
+import { apiFetch } from './request';
+
 const MOCK = import.meta.env.VITE_MOCK_AUTH === 'true';
 
 async function safeJson(res) {
@@ -51,11 +53,10 @@ export const login = async (data) => {
     return { ok: true, status: 200, body: { token: 'dev-jwt-token', user: { email: data.email } } };
   }
 
-  const res = await fetch(`${GATEWAY_BASE}/login`, {
+  const res = await apiFetch(`${GATEWAY_BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-    credentials: 'include'
+    body: JSON.stringify(data)
   });
   const body = await safeJson(res);
   return { ok: res.ok, status: res.status, body: normalizeBody(body) };
@@ -80,11 +81,10 @@ export const register = async (data) => {
     return { ok: true, status: 201, body: { message: 'Registration successful', user_id: 'mock-id-123' } };
   }
 
-  const res = await fetch(`${GATEWAY_BASE}/register`, {
+  const res = await apiFetch(`${GATEWAY_BASE}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-    credentials: 'include'
+    body: JSON.stringify(data)
   });
   const body = await safeJson(res);
   return { ok: res.ok, status: res.status, body: normalizeBody(body) };

@@ -72,9 +72,12 @@ const Login = () => {
       // Call Gateway -> Auth Service
       const res = await apiLogin({ email: formData.email, password: formData.password });
 
-      if (res.ok && res.body && res.body.token) {
-        // store token via AuthContext (AuthContext.login stores token in localStorage)
-        login(res.body.token);
+      // Accept both token-based and HttpOnly-cookie session logins.
+      if (res.ok) {
+        // Pass token and/or user to context so both token and user are persisted
+        const token = res.body && res.body.token;
+        const user = res.body && res.body.user;
+        login(token, user);
         setLoading(false);
         navigate('/home', { replace: true });
         return;

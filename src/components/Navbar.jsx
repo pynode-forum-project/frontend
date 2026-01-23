@@ -43,8 +43,20 @@ const Navbar = () => {
                 </Link>
               </li>
               <li>
+                <Link className="nav-link" to="/history">
+                  History
+                <Link className="nav-link" to="/posts">
+                  Posts
+                </Link>
+              </li>
+              <li>
                 <Link className="nav-link" to="/users/profile">
                   Profile
+                </Link>
+              </li>
+              <li>
+                <Link className="nav-link" to="/messages">
+                  Messages
                 </Link>
               </li>
               <li>
