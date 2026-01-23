@@ -1,18 +1,24 @@
-FROM node:22-alpine
+# Multi-stage build: build with Node, serve with nginx
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
-RUN npm install
+COPY package*.json ./
+RUN npm ci --silent
 
-# Copy application code
+# Copy source and build
 COPY . .
+RUN npm run build
 
-# Expose port
-EXPOSE 3000
+FROM nginx:1.25-alpine
 
-# Run the development server
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Replace default nginx config with SPA-friendly config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

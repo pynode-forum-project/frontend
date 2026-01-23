@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import Contact from "../pages/Contact";
+import History from "../pages/History";
 import Message from "../pages/Message";
 import PostList from "../pages/PostList";
 import ProtectedRoute from "../routes/ProtectedRoute";
