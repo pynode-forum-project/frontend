@@ -5,6 +5,7 @@ import Register from "../pages/Register";
 import Home from "../pages/Home";
 import Profile from "../pages/Profile";
 import Contact from "../pages/Contact";
+import PostDetail from "../pages/PostDetail";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
       // later: wrap these with ProtectedRoute
       { path: "/home", element: <Home /> },
       { path: "/users/profile", element: <Profile /> },
+      { path: "/posts/:id", element: <PostDetail /> },
 
       // 404
       { path: "*", element: <div className="container mt-4">404 Not Found</div> },
