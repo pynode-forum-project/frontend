@@ -18,6 +18,13 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (config.data instanceof FormData) {
+      if (typeof config.headers?.delete === "function") {
+        config.headers.delete("Content-Type");
+      } else if (config.headers) {
+        delete config.headers["Content-Type"];
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error),
@@ -159,9 +166,7 @@ export const fileAPI = {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", type);
-    return api.post("/files/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return api.post("/files/upload", formData);
   },
   getPresignedUrl: (key) => api.get(`/files/${key}`),
   delete: (key) => api.delete(`/files/${key}`),
