@@ -1,14 +1,15 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
+import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
   server: {
+    port: 3000,
+    host: true,
     proxy: {
       '/api': {
-        target: process.env.GATEWAY_URL || 'http://localhost:8080',
-        changeOrigin: true,
-        secure: false,
+        target: 'http://localhost:8080',
+        changeOrigin: true
       }
     }
   }
