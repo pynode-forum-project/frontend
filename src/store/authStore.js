@@ -7,12 +7,14 @@ export const useAuthStore = create(
       token: null,
       user: null,
       isAuthenticated: false,
+      pendingEmail: null,
 
       login: (token, user) => {
         set({
           token,
           user,
           isAuthenticated: true,
+          pendingEmail: user?.pendingEmail ?? null,
         })
       },
 
@@ -21,12 +23,25 @@ export const useAuthStore = create(
           token: null,
           user: null,
           isAuthenticated: false,
+          pendingEmail: null,
         })
       },
 
       updateUser: (userData) => {
         set({
           user: { ...get().user, ...userData },
+        })
+      },
+
+      setPendingEmail: (email) => {
+        set({
+          pendingEmail: email,
+        })
+      },
+
+      clearPendingEmail: () => {
+        set({
+          pendingEmail: null,
         })
       },
 

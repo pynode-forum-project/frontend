@@ -1,22 +1,49 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { authAPI } from '../services/api'
+import { authAPI, userAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import { FiMail, FiCheck } from 'react-icons/fi'
 
 const VerifyEmailPage = () => {
   const navigate = useNavigate()
-  const { user, login } = useAuthStore()
+  const { user, login, pendingEmail, clearPendingEmail, updateUser, setPendingEmail } = useAuthStore()
   const [code, setCode] = useState('')
+  const userId = user?.userId
+
+  const { data: profileData } = useQuery({
+    queryKey: ['user', userId, 'verify-email'],
+    queryFn: () => userAPI.getById(userId),
+    enabled: !!userId,
+  })
+
+  const profileUser = profileData?.data?.user
+  const profilePendingEmail = profileUser?.pendingEmail
+  const targetEmail = pendingEmail || profilePendingEmail || user?.pendingEmail || user?.email
+
+  useEffect(() => {
+    if (!profileUser) {
+      return
+    }
+
+    if (!user || user.pendingEmail !== profileUser.pendingEmail || user.email !== profileUser.email) {
+      updateUser(profileUser)
+    }
+    if (profileUser.pendingEmail && profileUser.pendingEmail !== pendingEmail) {
+      setPendingEmail(profileUser.pendingEmail)
+    } else if (!profileUser.pendingEmail && pendingEmail) {
+      clearPendingEmail()
+    }
+  }, [profileUser, user, updateUser, setPendingEmail, clearPendingEmail, pendingEmail])
 
   const verifyMutation = useMutation({
-    mutationFn: () => authAPI.verifyEmail(user?.email, code),
+    mutationFn: () => authAPI.verifyEmail(targetEmail, code),
     onSuccess: (response) => {
       const { token, user: updatedUser } = response.data
       // Update token and user info with new JWT token
       login(token, updatedUser)
+      clearPendingEmail()
       toast.success('Email verified successfully!')
       navigate('/home')
     },
@@ -26,7 +53,7 @@ const VerifyEmailPage = () => {
   })
 
   const resendMutation = useMutation({
-    mutationFn: () => authAPI.resendVerification(user?.email),
+    mutationFn: () => authAPI.resendVerification(targetEmail),
     onSuccess: () => {
       toast.success('Verification code sent!')
     },
@@ -37,6 +64,10 @@ const VerifyEmailPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    if (!targetEmail) {
+      toast.error('No email available for verification')
+      return
+    }
     if (code.length === 6) {
       verifyMutation.mutate()
     }
@@ -58,7 +89,7 @@ const VerifyEmailPage = () => {
             <h1 className="text-3xl font-bold text-white mb-2">Verify Your Email</h1>
             <p className="text-gray-400">
               We've sent a 6-digit code to<br />
-              <span className="text-primary-400">{user?.email}</span>
+              <span className="text-primary-400">{targetEmail}</span>
             </p>
           </div>
 
@@ -79,7 +110,7 @@ const VerifyEmailPage = () => {
 
             <button
               type="submit"
-              disabled={code.length !== 6 || verifyMutation.isPending}
+              disabled={!targetEmail || code.length !== 6 || verifyMutation.isPending}
               className="btn-primary w-full flex items-center justify-center gap-2"
             >
               {verifyMutation.isPending ? (
@@ -97,7 +128,7 @@ const VerifyEmailPage = () => {
             <p className="text-gray-400 mb-2">Didn't receive the code?</p>
             <button
               onClick={() => resendMutation.mutate()}
-              disabled={resendMutation.isPending}
+              disabled={!targetEmail || resendMutation.isPending}
               className="text-primary-400 hover:text-primary-300 font-medium"
             >
               {resendMutation.isPending ? 'Sending...' : 'Resend Code'}

@@ -11,7 +11,7 @@ const ProfilePage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user: currentUser, updateUser, login } = useAuthStore()
+  const { user: currentUser, updateUser, login, setPendingEmail, clearPendingEmail } = useAuthStore()
   const [showEditModal, setShowEditModal] = useState(false)
   const [showVerifyModal, setShowVerifyModal] = useState(false)
   const [editData, setEditData] = useState({ firstName: '', lastName: '', email: '' })
@@ -84,7 +84,7 @@ const ProfilePage = () => {
   // Update profile mutation
   const updateMutation = useMutation({
     mutationFn: (data) => userAPI.update(id, data),
-    onSuccess: async (response) => {
+    onSuccess: async (response, variables) => {
       queryClient.invalidateQueries(['user', id])
       if (isOwnProfile) {
         updateUser(response.data.user)
@@ -92,20 +92,28 @@ const ProfilePage = () => {
       
       // If email was changed, send verification email and show verification modal
       if (response.data.emailChanged) {
-        const updatedEmail = response.data.user.email
-        setNewEmail(updatedEmail)
+        const requestedEmail = variables?.email
+        const pendingEmail = response.data.user?.pendingEmail || requestedEmail
+        if (pendingEmail) {
+          setPendingEmail(pendingEmail)
+        }
+        setNewEmail(pendingEmail || response.data.user.email)
         
         // Send verification email
         try {
-          await authAPI.resendVerification(updatedEmail)
+          await authAPI.resendVerification(pendingEmail || response.data.user.email)
           toast.success('Profile updated! Verification code sent to your new email.')
-          setShowEditModal(false)
-          setShowVerifyModal(true)
         } catch (error) {
           toast.error('Profile updated, but failed to send verification email. Please resend.')
-          setShowEditModal(false)
-          setShowVerifyModal(true)
         }
+        try {
+          const refreshResponse = await authAPI.refreshToken()
+          login(refreshResponse.data.token, response.data.user)
+        } catch (refreshError) {
+          console.error('Failed to refresh token after email update:', refreshError)
+        }
+        setShowEditModal(false)
+        setShowVerifyModal(true)
       } else {
         toast.success('Profile updated!')
         setShowEditModal(false)
@@ -123,6 +131,7 @@ const ProfilePage = () => {
       const { token, user: updatedUser } = response.data
       // Update token and user info with new JWT token
       login(token, updatedUser)
+      clearPendingEmail()
       queryClient.invalidateQueries(['user', id])
       toast.success('Email verified successfully!')
       setShowVerifyModal(false)
@@ -542,7 +551,7 @@ const ProfilePage = () => {
                   onChange={(e) => setEditData({ ...editData, email: e.target.value })}
                 />
                 <p className="text-yellow-400 text-xs mt-1">
-                  ⚠️ 更新邮箱后，您将需要验证新邮箱才能恢复完整权限
+                  ⚠️ After changing your email, you must verify the new address to restore full access.
                 </p>
               </div>
               <button
@@ -580,11 +589,11 @@ const ProfilePage = () => {
                 <FiMail className="w-8 h-8 text-white" />
               </div>
               <p className="text-gray-400 mb-2">
-                我们已向您的新邮箱发送了验证码
+                We've sent a verification code to your new email.
               </p>
               <p className="text-primary-400 font-medium">{newEmail}</p>
               <p className="text-yellow-400 text-sm mt-3">
-                ⚠️ 您的账户状态已变为未验证，验证成功后即可恢复完整权限
+                ⚠️ Your account is now unverified. Verify to restore full access.
               </p>
             </div>
 
@@ -599,7 +608,7 @@ const ProfilePage = () => {
             >
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2 text-center">
-                  输入验证码
+                  Enter verification code
                 </label>
                 <input
                   type="text"
@@ -621,20 +630,20 @@ const ProfilePage = () => {
                 ) : (
                   <>
                     <FiCheck />
-                    验证邮箱
+                    Verify email
                   </>
                 )}
               </button>
             </form>
 
             <div className="mt-4 text-center">
-              <p className="text-gray-400 mb-2 text-sm">没有收到验证码？</p>
+              <p className="text-gray-400 mb-2 text-sm">Didn't receive the code?</p>
               <button
                 onClick={() => resendVerificationMutation.mutate()}
                 disabled={resendVerificationMutation.isPending}
                 className="text-primary-400 hover:text-primary-300 font-medium text-sm"
               >
-                {resendVerificationMutation.isPending ? '发送中...' : '重新发送'}
+                {resendVerificationMutation.isPending ? 'Sending...' : 'Resend'}
               </button>
             </div>
 
@@ -648,7 +657,7 @@ const ProfilePage = () => {
                 }}
                 className="text-gray-500 hover:text-gray-400 text-sm"
               >
-                稍后验证
+                Verify later
               </button>
             </div>
           </div>

@@ -1,12 +1,27 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { postAPI, replyAPI, historyAPI, fileAPI } from '../services/api'
-import { useAuthStore } from '../store/authStore'
-import { FiArrowLeft, FiEdit2, FiTrash2, FiMessageCircle, FiSend, FiLock, FiUnlock, FiEye, FiEyeOff, FiPaperclip, FiXCircle, FiChevronLeft, FiChevronRight, FiCornerDownRight } from 'react-icons/fi'
-import CreatePostModal from '../components/CreatePostModal'
-import Avatar from '../components/Avatar'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { postAPI, replyAPI, historyAPI, fileAPI } from "../services/api";
+import { useAuthStore } from "../store/authStore";
+import {
+  FiArrowLeft,
+  FiEdit2,
+  FiTrash2,
+  FiMessageCircle,
+  FiSend,
+  FiLock,
+  FiUnlock,
+  FiEye,
+  FiEyeOff,
+  FiPaperclip,
+  FiXCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiCornerDownRight,
+} from "react-icons/fi";
+import CreatePostModal from "../components/CreatePostModal";
+import Avatar from "../components/Avatar";
 
 // Recursive component for nested replies
 const NestedReplies = ({
@@ -35,29 +50,29 @@ const NestedReplies = ({
   getFileName,
   parentReplyId, // Top-level reply ID
   path = [], // Path to this nested reply (array of indices)
-  parentReply = null // Parent reply object to show "replying to" info
+  parentReply = null, // Parent reply object to show "replying to" info
 }) => {
-  const maxDepth = 5 // Limit nesting depth to prevent infinite nesting
-  
+  const maxDepth = 5; // Limit nesting depth to prevent infinite nesting
+
   if (depth > maxDepth) {
     return null;
   }
 
   // Generate a unique key for nested replies using path
   const getReplyKey = (index) => {
-    return `${parentReplyId}-${[...path, index].join('-')}`;
+    return `${parentReplyId}-${[...path, index].join("-")}`;
   };
 
   // For nested replies, we don't need additional marginLeft since the parent container already has ml-4
   // Each nested level will be indented by the parent's ml-4 and pl-4
-  
+
   return (
     <div className="space-y-3">
       {replies.map((subReply, subIndex) => {
         const replyKey = getReplyKey(subIndex);
         const currentPath = [...path, subIndex];
         const isReplying = replyingTo === replyKey;
-        
+
         return (
           <div key={replyKey} className="bg-white/5 rounded-lg p-3 relative">
             <div className="flex items-start justify-between">
@@ -72,7 +87,7 @@ const NestedReplies = ({
                     </span>
                   </div>
                 )}
-                
+
                 <div className="flex items-center gap-2 mb-2">
                   <Avatar
                     profileImageUrl={subReply.user?.profileImageUrl}
@@ -85,20 +100,26 @@ const NestedReplies = ({
                       {subReply.user?.firstName} {subReply.user?.lastName}
                     </p>
                     <p className="text-gray-500 text-xs">
-                      {subReply.dateCreated ? formatDate(subReply.dateCreated) : 'Unknown date'}
+                      {subReply.dateCreated
+                        ? formatDate(subReply.dateCreated)
+                        : "Unknown date"}
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Delete button for nested replies */}
               {(subReply.userId === user?.userId || isOwner || isAdmin()) && (
                 <button
                   onClick={() => {
-                    if (window.confirm('Are you sure you want to delete this reply?')) {
+                    if (
+                      window.confirm(
+                        "Are you sure you want to delete this reply?",
+                      )
+                    ) {
                       deleteNestedReplyMutation.mutate({
                         parentReplyId: parentReplyId,
-                        targetPath: currentPath
+                        targetPath: currentPath,
                       });
                     }
                   }}
@@ -110,7 +131,7 @@ const NestedReplies = ({
               )}
             </div>
             <p className="text-gray-300 text-sm mb-2">{subReply.comment}</p>
-            
+
             {/* Sub-reply Attachments */}
             {subReply.attachments && subReply.attachments.length > 0 && (
               <div className="mt-2 space-y-1">
@@ -130,15 +151,18 @@ const NestedReplies = ({
             )}
 
             {/* Reply button for nested replies */}
-            {isVerified() && post.status === 'published' && !post.isArchived && depth < maxDepth && (
-              <button
-                onClick={() => setReplyingTo(isReplying ? null : replyKey)}
-                className="mt-2 text-xs text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
-              >
-                <FiCornerDownRight className="w-3 h-3" />
-                {isReplying ? 'Cancel' : 'Reply'}
-              </button>
-            )}
+            {isVerified() &&
+              post.status === "published" &&
+              !post.isArchived &&
+              depth < maxDepth && (
+                <button
+                  onClick={() => setReplyingTo(isReplying ? null : replyKey)}
+                  className="mt-2 text-xs text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
+                >
+                  <FiCornerDownRight className="w-3 h-3" />
+                  {isReplying ? "Cancel" : "Reply"}
+                </button>
+              )}
 
             {/* Sub-reply form for nested replies */}
             {isReplying && (
@@ -146,10 +170,15 @@ const NestedReplies = ({
                 <textarea
                   className="input-field min-h-[70px] resize-y text-xs"
                   placeholder={`Reply to ${subReply.user?.firstName}...`}
-                  value={subReplyContent[replyKey] || ''}
-                  onChange={(e) => setSubReplyContent({ ...subReplyContent, [replyKey]: e.target.value })}
+                  value={subReplyContent[replyKey] || ""}
+                  onChange={(e) =>
+                    setSubReplyContent({
+                      ...subReplyContent,
+                      [replyKey]: e.target.value,
+                    })
+                  }
                 />
-                
+
                 <div className="space-y-1">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -161,7 +190,9 @@ const NestedReplies = ({
                     />
                     <div className="btn-secondary flex items-center gap-1 w-fit text-xs px-2 py-1">
                       <FiPaperclip className="w-2.5 h-2.5" />
-                      {subReplyUploading[replyKey]?.length > 0 ? 'Uploading...' : 'Files'}
+                      {subReplyUploading[replyKey]?.length > 0
+                        ? "Uploading..."
+                        : "Files"}
                     </div>
                   </label>
 
@@ -182,7 +213,9 @@ const NestedReplies = ({
                             {getFileName(url)}
                           </a>
                           <button
-                            onClick={() => handleRemoveSubReplyAttachment(replyKey, index)}
+                            onClick={() =>
+                              handleRemoveSubReplyAttachment(replyKey, index)
+                            }
                             className="text-gray-400 hover:text-red-400 transition-colors"
                           >
                             <FiXCircle className="w-2.5 h-2.5" />
@@ -194,15 +227,20 @@ const NestedReplies = ({
                 </div>
 
                 <button
-                  onClick={() => createSubReplyMutation.mutate({
-                    replyId: parentReplyId, // Use parent reply ID
-                    comment: subReplyContent[replyKey] || '',
-                    attachments: subReplyAttachments[replyKey] || [],
-                    postId: post.postId,
-                    parentReplyId: parentReplyId,
-                    targetPath: currentPath // Pass the path to locate the target reply
-                  })}
-                  disabled={!subReplyContent[replyKey]?.trim() || createSubReplyMutation.isPending}
+                  onClick={() =>
+                    createSubReplyMutation.mutate({
+                      replyId: parentReplyId, // Use parent reply ID
+                      comment: subReplyContent[replyKey] || "",
+                      attachments: subReplyAttachments[replyKey] || [],
+                      postId: post.postId,
+                      parentReplyId: parentReplyId,
+                      targetPath: currentPath, // Pass the path to locate the target reply
+                    })
+                  }
+                  disabled={
+                    !subReplyContent[replyKey]?.trim() ||
+                    createSubReplyMutation.isPending
+                  }
                   className="btn-primary flex items-center gap-1 text-xs px-3 py-1.5"
                 >
                   {createSubReplyMutation.isPending ? (
@@ -237,7 +275,9 @@ const NestedReplies = ({
                   setSubReplyFiles={setSubReplyFiles}
                   subReplyUploading={subReplyUploading}
                   handleSubReplyFileSelect={handleSubReplyFileSelect}
-                  handleRemoveSubReplyAttachment={handleRemoveSubReplyAttachment}
+                  handleRemoveSubReplyAttachment={
+                    handleRemoveSubReplyAttachment
+                  }
                   createSubReplyMutation={createSubReplyMutation}
                   deleteReplyMutation={deleteReplyMutation}
                   deleteNestedReplyMutation={deleteNestedReplyMutation}
@@ -257,240 +297,271 @@ const NestedReplies = ({
 };
 
 const PostDetailPage = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const { user, isVerified, isAdmin } = useAuthStore()
-  const [replyContent, setReplyContent] = useState('')
-  const [replyAttachments, setReplyAttachments] = useState([])
-  const [uploadingFiles, setUploadingFiles] = useState([])
-  const [selectedFiles, setSelectedFiles] = useState([])
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [replyPage, setReplyPage] = useState(1)
-  const repliesPerPage = 10
-  const [replyingTo, setReplyingTo] = useState(null) // For nested replies
-  const [subReplyContent, setSubReplyContent] = useState({}) // { replyId: content }
-  const [subReplyAttachments, setSubReplyAttachments] = useState({}) // { replyId: [urls] }
-  const [subReplyFiles, setSubReplyFiles] = useState({}) // { replyId: [files] }
-  const [subReplyUploading, setSubReplyUploading] = useState({}) // { replyId: [filenames] }
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { user, isVerified, isAdmin } = useAuthStore();
+  const [replyContent, setReplyContent] = useState("");
+  const [replyAttachments, setReplyAttachments] = useState([]);
+  const [uploadingFiles, setUploadingFiles] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [replyPage, setReplyPage] = useState(1);
+  const repliesPerPage = 10;
+  const [replyingTo, setReplyingTo] = useState(null); // For nested replies
+  const [subReplyContent, setSubReplyContent] = useState({}); // { replyId: content }
+  const [subReplyAttachments, setSubReplyAttachments] = useState({}); // { replyId: [urls] }
+  const [subReplyFiles, setSubReplyFiles] = useState({}); // { replyId: [files] }
+  const [subReplyUploading, setSubReplyUploading] = useState({}); // { replyId: [filenames] }
 
   // Fetch post
   const { data: postData, isLoading } = useQuery({
-    queryKey: ['post', id],
+    queryKey: ["post", id],
     queryFn: () => postAPI.getById(id),
-  })
+  });
 
   // Fetch replies with pagination
   const { data: repliesData } = useQuery({
-    queryKey: ['replies', id, replyPage],
-    queryFn: () => replyAPI.getByPost(id, { page: replyPage, limit: repliesPerPage }),
-  })
+    queryKey: ["replies", id, replyPage],
+    queryFn: () =>
+      replyAPI.getByPost(id, { page: replyPage, limit: repliesPerPage }),
+  });
 
   // Record view history
   useEffect(() => {
     if (postData?.data?.post) {
-      historyAPI.record(id).catch(() => {})
+      historyAPI.record(id).catch(() => {});
     }
-  }, [id, postData])
+  }, [id, postData]);
 
-  const post = postData?.data?.post
-  const replies = repliesData?.data?.replies || []
-  const repliesTotalPages = repliesData?.data?.totalPages || 1
-  const repliesTotal = repliesData?.data?.total || 0
-  const isOwner = post?.userId === user?.userId
+  const post = postData?.data?.post;
+  const replies = repliesData?.data?.replies || [];
+  const repliesTopLevelPages =
+    repliesData?.data?.topLevelPages ?? repliesData?.data?.totalPages ?? 1;
+  const repliesTopLevelTotal =
+    repliesData?.data?.topLevelTotal ?? repliesData?.data?.total ?? 0;
+  const repliesTotalAll = repliesData?.data?.total ?? repliesTopLevelTotal ?? 0;
+  const isOwner = post?.userId === user?.userId;
 
   // Mutations
   const createReplyMutation = useMutation({
     mutationFn: () => replyAPI.create(id, replyContent, replyAttachments),
     onSuccess: () => {
-      queryClient.invalidateQueries(['replies', id])
-      setReplyContent('')
-      setReplyAttachments([])
-      setSelectedFiles([])
-      toast.success('Reply posted!')
+      queryClient.invalidateQueries(["replies", id]);
+      setReplyContent("");
+      setReplyAttachments([]);
+      setSelectedFiles([]);
+      toast.success("Reply posted!");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || 'Failed to post reply')
+      toast.error(error.response?.data?.error || "Failed to post reply");
     },
-  })
+  });
 
   const handleReplyFileSelect = async (e) => {
-    const files = Array.from(e.target.files)
-    if (files.length === 0) return
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    setUploadingFiles(files.map(f => f.name))
+    setUploadingFiles(files.map((f) => f.name));
 
     try {
-      const uploadPromises = files.map(file => 
-        fileAPI.upload(file, 'attachment').then(res => res.data.url)
-      )
-      
-      const urls = await Promise.all(uploadPromises)
-      setReplyAttachments([...replyAttachments, ...urls])
-      setSelectedFiles([...selectedFiles, ...files])
-      setUploadingFiles([])
-      toast.success(`${files.length} file(s) uploaded successfully`)
+      const uploadPromises = files.map((file) =>
+        fileAPI.upload(file, "attachment").then((res) => res.data.url),
+      );
+
+      const urls = await Promise.all(uploadPromises);
+      setReplyAttachments([...replyAttachments, ...urls]);
+      setSelectedFiles([...selectedFiles, ...files]);
+      setUploadingFiles([]);
+      toast.success(`${files.length} file(s) uploaded successfully`);
     } catch (error) {
-      toast.error('Failed to upload file(s)')
-      setUploadingFiles([])
+      toast.error("Failed to upload file(s)");
+      setUploadingFiles([]);
     }
-  }
+  };
 
   const handleRemoveReplyAttachment = (index) => {
-    setReplyAttachments(replyAttachments.filter((_, i) => i !== index))
-    setSelectedFiles(selectedFiles.filter((_, i) => i !== index))
-  }
+    setReplyAttachments(replyAttachments.filter((_, i) => i !== index));
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+  };
 
   const getFileName = (url) => {
     try {
-      const urlObj = new URL(url)
-      const pathParts = urlObj.pathname.split('/')
-      return decodeURIComponent(pathParts[pathParts.length - 1])
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split("/");
+      return decodeURIComponent(pathParts[pathParts.length - 1]);
     } catch {
-      return url.split('/').pop() || 'attachment'
+      return url.split("/").pop() || "attachment";
     }
-  }
+  };
 
   const deletePostMutation = useMutation({
     mutationFn: () => postAPI.delete(id),
     onSuccess: () => {
-      toast.success('Post deleted')
-      navigate('/home')
+      toast.success("Post deleted");
+      navigate("/home");
     },
-  })
+  });
 
   const archiveMutation = useMutation({
     mutationFn: () => postAPI.archive(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['post', id])
-      toast.success(post.isArchived ? 'Replies enabled' : 'Replies disabled')
+      queryClient.invalidateQueries(["post", id]);
+      toast.success(post.isArchived ? "Replies enabled" : "Replies disabled");
     },
-  })
+  });
 
   const updateStatusMutation = useMutation({
     mutationFn: (status) => postAPI.updateStatus(id, status),
     onSuccess: () => {
-      queryClient.invalidateQueries(['post', id])
-      toast.success('Post visibility updated')
+      queryClient.invalidateQueries(["post", id]);
+      toast.success("Post visibility updated");
     },
-  })
+  });
 
   const deleteReplyMutation = useMutation({
     mutationFn: (replyId) => replyAPI.delete(replyId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['replies', id])
-      queryClient.invalidateQueries(['post', id])
-      toast.success('Reply deleted')
+      queryClient.invalidateQueries(["replies", id]);
+      queryClient.invalidateQueries(["post", id]);
+      toast.success("Reply deleted");
     },
-  })
+  });
 
   // Delete nested reply mutation
   const deleteNestedReplyMutation = useMutation({
-    mutationFn: ({ parentReplyId, targetPath }) => replyAPI.deleteNested(parentReplyId, targetPath),
+    mutationFn: ({ parentReplyId, targetPath }) =>
+      replyAPI.deleteNested(parentReplyId, targetPath),
     onSuccess: () => {
-      queryClient.invalidateQueries(['replies', id])
-      queryClient.invalidateQueries(['post', id])
-      toast.success('Reply deleted')
+      queryClient.invalidateQueries(["replies", id]);
+      queryClient.invalidateQueries(["post", id]);
+      toast.success("Reply deleted");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || 'Failed to delete reply')
+      toast.error(error.response?.data?.error || "Failed to delete reply");
     },
-  })
+  });
 
   // Create sub-reply mutation
   const createSubReplyMutation = useMutation({
-    mutationFn: ({ replyId, comment, attachments }) => replyAPI.createSubReply(replyId, comment, attachments),
+    mutationFn: ({
+      replyId,
+      comment,
+      attachments,
+      postId,
+      parentReplyId,
+      targetPath,
+    }) =>
+      replyAPI.createSubReply(
+        replyId,
+        comment,
+        attachments,
+        postId,
+        parentReplyId,
+        targetPath,
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries(['replies', id])
-      queryClient.invalidateQueries(['post', id])
-      setReplyingTo(null)
-      setSubReplyContent({})
-      setSubReplyAttachments({})
-      setSubReplyFiles({})
-      toast.success('Reply posted!')
+      queryClient.invalidateQueries(["replies", id]);
+      queryClient.invalidateQueries(["post", id]);
+      setReplyingTo(null);
+      setSubReplyContent({});
+      setSubReplyAttachments({});
+      setSubReplyFiles({});
+      toast.success("Reply posted!");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || 'Failed to post reply')
+      toast.error(error.response?.data?.error || "Failed to post reply");
     },
-  })
+  });
 
   // Handle sub-reply file upload
   const handleSubReplyFileSelect = async (e, replyId) => {
-    const files = Array.from(e.target.files)
-    if (files.length === 0) return
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    setSubReplyUploading(prev => ({ ...prev, [replyId]: files.map(f => f.name) }))
+    setSubReplyUploading((prev) => ({
+      ...prev,
+      [replyId]: files.map((f) => f.name),
+    }));
 
     try {
-      const uploadPromises = files.map(file => 
-        fileAPI.upload(file, 'attachment').then(res => res.data.url)
-      )
-      
-      const urls = await Promise.all(uploadPromises)
-      setSubReplyAttachments(prev => ({ ...prev, [replyId]: [...(prev[replyId] || []), ...urls] }))
-      setSubReplyFiles(prev => ({ ...prev, [replyId]: [...(prev[replyId] || []), ...files] }))
-      setSubReplyUploading(prev => {
-        const newState = { ...prev }
-        delete newState[replyId]
-        return newState
-      })
-      toast.success(`${files.length} file(s) uploaded successfully`)
+      const uploadPromises = files.map((file) =>
+        fileAPI.upload(file, "attachment").then((res) => res.data.url),
+      );
+
+      const urls = await Promise.all(uploadPromises);
+      setSubReplyAttachments((prev) => ({
+        ...prev,
+        [replyId]: [...(prev[replyId] || []), ...urls],
+      }));
+      setSubReplyFiles((prev) => ({
+        ...prev,
+        [replyId]: [...(prev[replyId] || []), ...files],
+      }));
+      setSubReplyUploading((prev) => {
+        const newState = { ...prev };
+        delete newState[replyId];
+        return newState;
+      });
+      toast.success(`${files.length} file(s) uploaded successfully`);
     } catch (error) {
-      toast.error('Failed to upload file(s)')
-      setSubReplyUploading(prev => {
-        const newState = { ...prev }
-        delete newState[replyId]
-        return newState
-      })
+      toast.error("Failed to upload file(s)");
+      setSubReplyUploading((prev) => {
+        const newState = { ...prev };
+        delete newState[replyId];
+        return newState;
+      });
     }
-  }
+  };
 
   const handleRemoveSubReplyAttachment = (replyId, index) => {
-    setSubReplyAttachments(prev => ({
+    setSubReplyAttachments((prev) => ({
       ...prev,
-      [replyId]: (prev[replyId] || []).filter((_, i) => i !== index)
-    }))
-    setSubReplyFiles(prev => ({
+      [replyId]: (prev[replyId] || []).filter((_, i) => i !== index),
+    }));
+    setSubReplyFiles((prev) => ({
       ...prev,
-      [replyId]: (prev[replyId] || []).filter((_, i) => i !== index)
-    }))
-  }
+      [replyId]: (prev[replyId] || []).filter((_, i) => i !== index),
+    }));
+  };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
         <div className="w-8 h-8 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
       </div>
-    )
+    );
   }
 
   if (!post) {
     return (
       <div className="card p-12 text-center">
         <h2 className="text-2xl font-bold text-white mb-2">Post not found</h2>
-        <p className="text-gray-400 mb-4">This post may have been deleted or you don't have access.</p>
-        <button onClick={() => navigate('/home')} className="btn-primary">
+        <p className="text-gray-400 mb-4">
+          This post may have been deleted or you don't have access.
+        </p>
+        <button onClick={() => navigate("/home")} className="btn-primary">
           Go Home
         </button>
       </div>
-    )
+    );
   }
 
   return (
     <div className="max-w-3xl mx-auto">
       {/* Back button */}
       <button
-        onClick={() => navigate('/home')}
+        onClick={() => navigate("/home")}
         className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
       >
         <FiArrowLeft />
@@ -501,17 +572,17 @@ const PostDetailPage = () => {
       <div className="card p-8 mb-6 animate-fade-in">
         {/* Status badges */}
         <div className="flex gap-2 mb-4">
-          {post.status === 'banned' && (
+          {post.status === "banned" && (
             <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-sm">
               Banned
             </span>
           )}
-          {post.status === 'hidden' && (
+          {post.status === "hidden" && (
             <span className="bg-yellow-500/10 text-yellow-400 px-3 py-1 rounded-full text-sm">
               Hidden
             </span>
           )}
-          {post.status === 'deleted' && (
+          {post.status === "deleted" && (
             <span className="bg-gray-500/10 text-gray-400 px-3 py-1 rounded-full text-sm">
               Deleted
             </span>
@@ -537,7 +608,9 @@ const PostDetailPage = () => {
             <p className="text-white font-medium">
               {post.user?.firstName} {post.user?.lastName}
             </p>
-            <p className="text-gray-400 text-sm">{formatDate(post.dateCreated)}</p>
+            <p className="text-gray-400 text-sm">
+              {formatDate(post.dateCreated)}
+            </p>
             {post.dateModified && (
               <p className="text-gray-500 text-xs">
                 Last edited: {formatDate(post.dateModified)}
@@ -573,9 +646,9 @@ const PostDetailPage = () => {
         )}
 
         {/* Owner/Admin actions */}
-        {(isOwner || isAdmin()) && post.status !== 'deleted' && (
+        {(isOwner || isAdmin()) && post.status !== "deleted" && (
           <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
-            {isOwner && post.status !== 'banned' && (
+            {isOwner && post.status !== "banned" && (
               <>
                 <button
                   onClick={() => setShowEditModal(true)}
@@ -588,16 +661,18 @@ const PostDetailPage = () => {
                   className="btn-secondary flex items-center gap-2 text-sm"
                 >
                   {post.isArchived ? <FiUnlock /> : <FiLock />}
-                  {post.isArchived ? 'Enable Replies' : 'Disable Replies'}
+                  {post.isArchived ? "Enable Replies" : "Disable Replies"}
                 </button>
                 <button
-                  onClick={() => updateStatusMutation.mutate(
-                    post.status === 'hidden' ? 'published' : 'hidden'
-                  )}
+                  onClick={() =>
+                    updateStatusMutation.mutate(
+                      post.status === "hidden" ? "published" : "hidden",
+                    )
+                  }
                   className="btn-secondary flex items-center gap-2 text-sm"
                 >
-                  {post.status === 'hidden' ? <FiEye /> : <FiEyeOff />}
-                  {post.status === 'hidden' ? 'Show Post' : 'Hide Post'}
+                  {post.status === "hidden" ? <FiEye /> : <FiEyeOff />}
+                  {post.status === "hidden" ? "Show Post" : "Hide Post"}
                 </button>
               </>
             )}
@@ -617,11 +692,11 @@ const PostDetailPage = () => {
       <div className="card p-6">
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
           <FiMessageCircle />
-          Replies ({post?.replyCount ?? repliesTotal ?? replies.length})
+          Replies ({post?.replyCount ?? repliesTotalAll ?? replies.length})
         </h2>
 
         {/* Reply form */}
-        {isVerified() && post.status === 'published' && !post.isArchived && (
+        {isVerified() && post.status === "published" && !post.isArchived && (
           <div className="mb-6 space-y-3">
             <textarea
               className="input-field min-h-[100px] resize-y"
@@ -629,7 +704,7 @@ const PostDetailPage = () => {
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
             />
-            
+
             {/* File upload for reply */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -642,14 +717,14 @@ const PostDetailPage = () => {
                 />
                 <div className="btn-secondary flex items-center gap-2 w-fit text-sm">
                   <FiPaperclip />
-                  {uploadingFiles.length > 0 ? 'Uploading...' : 'Add Files'}
+                  {uploadingFiles.length > 0 ? "Uploading..." : "Add Files"}
                 </div>
               </label>
 
               {/* Uploading indicator */}
               {uploadingFiles.length > 0 && (
                 <div className="text-sm text-gray-400">
-                  Uploading: {uploadingFiles.join(', ')}
+                  Uploading: {uploadingFiles.join(", ")}
                 </div>
               )}
 
@@ -707,7 +782,9 @@ const PostDetailPage = () => {
         {/* Replies list */}
         <div className="space-y-4">
           {replies.length === 0 ? (
-            <p className="text-gray-400 text-center py-8">No replies yet. Be the first to reply!</p>
+            <p className="text-gray-400 text-center py-8">
+              No replies yet. Be the first to reply!
+            </p>
           ) : (
             replies.map((reply) => (
               <div key={reply.replyId} className="bg-white/5 rounded-xl p-4">
@@ -723,10 +800,12 @@ const PostDetailPage = () => {
                       <p className="text-white font-medium text-sm">
                         {reply.user?.firstName} {reply.user?.lastName}
                       </p>
-                      <p className="text-gray-500 text-xs">{formatDate(reply.dateCreated)}</p>
+                      <p className="text-gray-500 text-xs">
+                        {formatDate(reply.dateCreated)}
+                      </p>
                     </div>
                   </div>
-                  
+
                   {/* Delete button for reply owner, post owner, or admin */}
                   {(reply.userId === user?.userId || isOwner || isAdmin()) && (
                     <button
@@ -738,7 +817,7 @@ const PostDetailPage = () => {
                   )}
                 </div>
                 <p className="text-gray-300 mb-3">{reply.comment}</p>
-                
+
                 {/* Reply Attachments */}
                 {reply.attachments && reply.attachments.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -758,15 +837,21 @@ const PostDetailPage = () => {
                 )}
 
                 {/* Reply button */}
-                {isVerified() && post.status === 'published' && !post.isArchived && (
-                  <button
-                    onClick={() => setReplyingTo(replyingTo === reply.replyId ? null : reply.replyId)}
-                    className="mt-3 text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
-                  >
-                    <FiCornerDownRight className="w-3 h-3" />
-                    {replyingTo === reply.replyId ? 'Cancel' : 'Reply'}
-                  </button>
-                )}
+                {isVerified() &&
+                  post.status === "published" &&
+                  !post.isArchived && (
+                    <button
+                      onClick={() =>
+                        setReplyingTo(
+                          replyingTo === reply.replyId ? null : reply.replyId,
+                        )
+                      }
+                      className="mt-3 text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
+                    >
+                      <FiCornerDownRight className="w-3 h-3" />
+                      {replyingTo === reply.replyId ? "Cancel" : "Reply"}
+                    </button>
+                  )}
 
                 {/* Sub-reply form */}
                 {replyingTo === reply.replyId && (
@@ -774,10 +859,15 @@ const PostDetailPage = () => {
                     <textarea
                       className="input-field min-h-[80px] resize-y text-sm"
                       placeholder={`Reply to ${reply.user?.firstName}...`}
-                      value={subReplyContent[reply.replyId] || ''}
-                      onChange={(e) => setSubReplyContent({ ...subReplyContent, [reply.replyId]: e.target.value })}
+                      value={subReplyContent[reply.replyId] || ""}
+                      onChange={(e) =>
+                        setSubReplyContent({
+                          ...subReplyContent,
+                          [reply.replyId]: e.target.value,
+                        })
+                      }
                     />
-                    
+
                     {/* File upload for sub-reply */}
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -785,59 +875,78 @@ const PostDetailPage = () => {
                           type="file"
                           multiple
                           className="hidden"
-                          onChange={(e) => handleSubReplyFileSelect(e, reply.replyId)}
-                          disabled={subReplyUploading[reply.replyId]?.length > 0}
+                          onChange={(e) =>
+                            handleSubReplyFileSelect(e, reply.replyId)
+                          }
+                          disabled={
+                            subReplyUploading[reply.replyId]?.length > 0
+                          }
                         />
                         <div className="btn-secondary flex items-center gap-2 w-fit text-xs">
                           <FiPaperclip />
-                          {subReplyUploading[reply.replyId]?.length > 0 ? 'Uploading...' : 'Add Files'}
+                          {subReplyUploading[reply.replyId]?.length > 0
+                            ? "Uploading..."
+                            : "Add Files"}
                         </div>
                       </label>
 
                       {/* Uploading indicator */}
                       {subReplyUploading[reply.replyId]?.length > 0 && (
                         <div className="text-xs text-gray-400">
-                          Uploading: {subReplyUploading[reply.replyId].join(', ')}
+                          Uploading:{" "}
+                          {subReplyUploading[reply.replyId].join(", ")}
                         </div>
                       )}
 
                       {/* Attachments list */}
                       {subReplyAttachments[reply.replyId]?.length > 0 && (
                         <div className="space-y-2">
-                          {subReplyAttachments[reply.replyId].map((url, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between bg-white/5 rounded-lg p-2"
-                            >
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary-400 hover:text-primary-300 text-xs flex items-center gap-2 flex-1"
+                          {subReplyAttachments[reply.replyId].map(
+                            (url, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between bg-white/5 rounded-lg p-2"
                               >
-                                <FiPaperclip className="w-3 h-3" />
-                                {getFileName(url)}
-                              </a>
-                              <button
-                                onClick={() => handleRemoveSubReplyAttachment(reply.replyId, index)}
-                                className="text-gray-400 hover:text-red-400 transition-colors"
-                              >
-                                <FiXCircle className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary-400 hover:text-primary-300 text-xs flex items-center gap-2 flex-1"
+                                >
+                                  <FiPaperclip className="w-3 h-3" />
+                                  {getFileName(url)}
+                                </a>
+                                <button
+                                  onClick={() =>
+                                    handleRemoveSubReplyAttachment(
+                                      reply.replyId,
+                                      index,
+                                    )
+                                  }
+                                  className="text-gray-400 hover:text-red-400 transition-colors"
+                                >
+                                  <FiXCircle className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ),
+                          )}
                         </div>
                       )}
                     </div>
 
                     <button
-                      onClick={() => createSubReplyMutation.mutate({
-                        replyId: reply.replyId,
-                        comment: subReplyContent[reply.replyId] || '',
-                        attachments: subReplyAttachments[reply.replyId] || [],
-                        postId: post.postId
-                      })}
-                      disabled={!subReplyContent[reply.replyId]?.trim() || createSubReplyMutation.isPending}
+                      onClick={() =>
+                        createSubReplyMutation.mutate({
+                          replyId: reply.replyId,
+                          comment: subReplyContent[reply.replyId] || "",
+                          attachments: subReplyAttachments[reply.replyId] || [],
+                          postId: post.postId,
+                        })
+                      }
+                      disabled={
+                        !subReplyContent[reply.replyId]?.trim() ||
+                        createSubReplyMutation.isPending
+                      }
                       className="btn-primary flex items-center gap-2 text-sm"
                     >
                       {createSubReplyMutation.isPending ? (
@@ -872,7 +981,9 @@ const PostDetailPage = () => {
                       setSubReplyFiles={setSubReplyFiles}
                       subReplyUploading={subReplyUploading}
                       handleSubReplyFileSelect={handleSubReplyFileSelect}
-                      handleRemoveSubReplyAttachment={handleRemoveSubReplyAttachment}
+                      handleRemoveSubReplyAttachment={
+                        handleRemoveSubReplyAttachment
+                      }
                       createSubReplyMutation={createSubReplyMutation}
                       deleteReplyMutation={deleteReplyMutation}
                       deleteNestedReplyMutation={deleteNestedReplyMutation}
@@ -890,49 +1001,54 @@ const PostDetailPage = () => {
         </div>
 
         {/* Pagination */}
-        {replies.length > 0 && repliesTotalPages > 1 && (
+        {replies.length > 0 && repliesTopLevelPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-6">
             <button
-              onClick={() => setReplyPage(prev => Math.max(1, prev - 1))}
+              onClick={() => setReplyPage((prev) => Math.max(1, prev - 1))}
               disabled={replyPage === 1}
               className="px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <FiChevronLeft className="w-4 h-4" />
               Previous
             </button>
-            
+
             <div className="flex items-center gap-2">
-              {Array.from({ length: Math.min(5, repliesTotalPages) }, (_, i) => {
-                let pageNum;
-                if (repliesTotalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (replyPage <= 3) {
-                  pageNum = i + 1;
-                } else if (replyPage >= repliesTotalPages - 2) {
-                  pageNum = repliesTotalPages - 4 + i;
-                } else {
-                  pageNum = replyPage - 2 + i;
-                }
-                
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setReplyPage(pageNum)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      replyPage === pageNum
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
+              {Array.from(
+                { length: Math.min(5, repliesTopLevelPages) },
+                (_, i) => {
+                  let pageNum;
+                  if (repliesTopLevelPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (replyPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (replyPage >= repliesTopLevelPages - 2) {
+                    pageNum = repliesTopLevelPages - 4 + i;
+                  } else {
+                    pageNum = replyPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setReplyPage(pageNum)}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        replyPage === pageNum
+                          ? "bg-primary-500 text-white"
+                          : "bg-white/5 text-gray-400 hover:bg-white/10"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                },
+              )}
             </div>
-            
+
             <button
-              onClick={() => setReplyPage(prev => Math.min(repliesTotalPages, prev + 1))}
-              disabled={replyPage === repliesTotalPages}
+              onClick={() =>
+                setReplyPage((prev) => Math.min(repliesTopLevelPages, prev + 1))
+              }
+              disabled={replyPage === repliesTopLevelPages}
               className="px-4 py-2 rounded-lg bg-white/5 text-gray-400 hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               Next
@@ -944,7 +1060,9 @@ const PostDetailPage = () => {
         {/* Page Info */}
         {replies.length > 0 && (
           <div className="text-center text-gray-400 text-sm mt-4">
-            Showing {((replyPage - 1) * repliesPerPage) + 1} to {Math.min(replyPage * repliesPerPage, repliesTotal)} of {repliesTotal} replies
+            Showing {(replyPage - 1) * repliesPerPage + 1} to{" "}
+            {Math.min(replyPage * repliesPerPage, repliesTopLevelTotal)} of{" "}
+            {repliesTopLevelTotal} floors
           </div>
         )}
       </div>
@@ -957,7 +1075,7 @@ const PostDetailPage = () => {
         />
       )}
     </div>
-  )
-}
+  );
+};
 
-export default PostDetailPage
+export default PostDetailPage;

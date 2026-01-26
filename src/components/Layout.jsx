@@ -7,7 +7,7 @@ import Navbar from './Navbar'
 
 const Layout = () => {
   const navigate = useNavigate()
-  const { isAuthenticated, user, logout, token } = useAuthStore()
+  const { isAuthenticated, user, logout, token, updateUser } = useAuthStore()
 
   // Check user status on mount if authenticated
   useEffect(() => {
@@ -23,8 +23,18 @@ const Layout = () => {
             navigate('/users/login')
             return
           }
-          // If user type changed (promoted/demoted), force logout
+          // If user type changed (promoted/demoted), force logout.
+          // Allow unverified <-> normal transitions for email verification.
           if (userData.type !== user.type) {
+            const isVerificationTransition =
+              (user.type === 'unverified' && userData.type === 'normal') ||
+              (user.type === 'normal' && userData.type === 'unverified')
+
+            if (isVerificationTransition) {
+              updateUser(userData)
+              return
+            }
+
             logout()
             toast.error('Your account role has been changed. Please log in again.')
             navigate('/users/login')
@@ -39,7 +49,7 @@ const Layout = () => {
           }
         })
     }
-  }, [isAuthenticated, user?.userId, user?.type, token, logout, navigate])
+  }, [isAuthenticated, user?.userId, user?.type, token, logout, navigate, updateUser])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">

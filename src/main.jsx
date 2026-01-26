@@ -11,8 +11,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 数据在5分钟内被认为是新鲜的，不会重新请求
-      gcTime: 10 * 60 * 1000, // 缓存数据保留10分钟（原cacheTime）
+      staleTime: 5 * 60 * 1000, // Data is fresh for 5 minutes; no refetch.
+      gcTime: 10 * 60 * 1000, // Cache retained for 10 minutes (formerly cacheTime).
     },
   },
 })
