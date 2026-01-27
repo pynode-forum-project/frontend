@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { userAPI, postAPI, historyAPI, fileAPI, authAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
-import { FiEdit2, FiCalendar, FiFileText, FiClock, FiUpload, FiX, FiMessageCircle, FiHash, FiCopy, FiChevronLeft, FiChevronRight, FiSearch, FiFilter, FiRotateCcw, FiMail, FiCheck, FiSend } from 'react-icons/fi'
+import { FiEdit2, FiCalendar, FiFileText, FiClock, FiUpload, FiX, FiMessageCircle, FiHash, FiCopy, FiChevronLeft, FiChevronRight, FiSearch, FiFilter, FiRotateCcw, FiMail, FiCheck, FiSend, FiEye } from 'react-icons/fi'
 import Avatar from '../components/Avatar'
 
 const ProfilePage = () => {
@@ -44,6 +44,13 @@ const ProfilePage = () => {
     enabled: isOwnProfile,
   })
 
+  // Fetch hidden posts (only for own profile)
+  const { data: hiddenData } = useQuery({
+    queryKey: ['hidden'],
+    queryFn: () => postAPI.getHidden(),
+    enabled: isOwnProfile,
+  })
+
   // Fetch history (only for own profile)
   const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['history', id, historyPage, isSearching, searchKeyword, searchDate],
@@ -59,6 +66,7 @@ const ProfilePage = () => {
   const user = userData?.data?.user
   const topPosts = topPostsData?.data?.posts || []
   const drafts = draftsData?.data?.posts || []
+  const hiddenPosts = hiddenData?.data?.posts || []
   const history = historyData?.data?.histories || []
   const historyTotalPages = isSearching ? 1 : (historyData?.data?.totalPages || 1)
   const historyTotal = isSearching ? history.length : (historyData?.data?.total || 0)
@@ -163,6 +171,19 @@ const ProfilePage = () => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.error || 'Failed to publish draft')
+    },
+  })
+
+  // Show hidden post mutation
+  const showHiddenMutation = useMutation({
+    mutationFn: (postId) => postAPI.updateStatus(postId, 'published'),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['hidden'])
+      queryClient.invalidateQueries(['posts'])
+      toast.success('Post is now visible!')
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to show post')
     },
   })
 
@@ -369,6 +390,52 @@ const ProfilePage = () => {
                     >
                       <FiSend className="w-4 h-4" />
                       {publishDraftMutation.isPending ? 'Publishing...' : 'Publish'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Hidden Posts (Own profile only) */}
+      {isOwnProfile && (
+        <div className="card p-6 mb-6">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <FiEye />
+            Hidden Posts
+          </h2>
+          {hiddenPosts.length === 0 ? (
+            <p className="text-gray-400">No hidden posts.</p>
+          ) : (
+            <div className="space-y-3">
+              {hiddenPosts.map((post) => (
+                <div
+                  key={post.postId}
+                  className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <Link
+                      to={`/posts/${post.postId}`}
+                      className="flex-1"
+                    >
+                      <h3 className="text-white font-medium">{post.title}</h3>
+                      <p className="text-gray-400 text-sm">{formatDate(post.dateCreated)}</p>
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (window.confirm('Make this post visible to everyone?')) {
+                          showHiddenMutation.mutate(post.postId)
+                        }
+                      }}
+                      disabled={showHiddenMutation.isPending}
+                      className="btn-primary flex items-center gap-2 text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FiEye className="w-4 h-4" />
+                      {showHiddenMutation.isPending ? 'Showing...' : 'Show Post'}
                     </button>
                   </div>
                 </div>

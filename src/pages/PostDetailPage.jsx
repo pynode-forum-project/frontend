@@ -762,26 +762,26 @@ const PostDetailPage = () => {
                   <FiEdit2 /> Edit
                 </button>
                 {post.status === "published" && (
-                  <>
-                    <button
-                      onClick={() => archiveMutation.mutate()}
-                      className="btn-secondary flex items-center gap-2 text-sm"
-                    >
-                      {post.isArchived ? <FiUnlock /> : <FiLock />}
-                      {post.isArchived ? "Enable Replies" : "Disable Replies"}
-                    </button>
-                    <button
-                      onClick={() =>
-                        updateStatusMutation.mutate(
-                          post.status === "hidden" ? "published" : "hidden",
-                        )
-                      }
-                      className="btn-secondary flex items-center gap-2 text-sm"
-                    >
-                      {post.status === "hidden" ? <FiEye /> : <FiEyeOff />}
-                      {post.status === "hidden" ? "Show Post" : "Hide Post"}
-                    </button>
-                  </>
+                  <button
+                    onClick={() => archiveMutation.mutate()}
+                    className="btn-secondary flex items-center gap-2 text-sm"
+                  >
+                    {post.isArchived ? <FiUnlock /> : <FiLock />}
+                    {post.isArchived ? "Enable Replies" : "Disable Replies"}
+                  </button>
+                )}
+                {(post.status === "published" || post.status === "hidden") && (
+                  <button
+                    onClick={() =>
+                      updateStatusMutation.mutate(
+                        post.status === "hidden" ? "published" : "hidden",
+                      )
+                    }
+                    className="btn-secondary flex items-center gap-2 text-sm"
+                  >
+                    {post.status === "hidden" ? <FiEye /> : <FiEyeOff />}
+                    {post.status === "hidden" ? "Show Post" : "Hide Post"}
+                  </button>
                 )}
               </>
             )}

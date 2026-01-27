@@ -104,6 +104,7 @@ export const userAPI = {
 export const postAPI = {
   getAll: (params = {}) => api.get("/posts", { params }),
   getDrafts: () => api.get("/posts/drafts"),
+  getHidden: () => api.get("/posts/hidden"),
   getBanned: (params = {}) => api.get("/posts/banned", { params }),
   getDeleted: (params = {}) => api.get("/posts/deleted", { params }),
   getById: (id) => api.get(`/posts/${id}`),
