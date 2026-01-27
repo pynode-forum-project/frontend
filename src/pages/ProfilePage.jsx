@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { userAPI, postAPI, historyAPI, fileAPI, authAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
-import { FiEdit2, FiCalendar, FiFileText, FiClock, FiUpload, FiX, FiMessageCircle, FiHash, FiCopy, FiChevronLeft, FiChevronRight, FiSearch, FiFilter, FiRotateCcw, FiMail, FiCheck } from 'react-icons/fi'
+import { FiEdit2, FiCalendar, FiFileText, FiClock, FiUpload, FiX, FiMessageCircle, FiHash, FiCopy, FiChevronLeft, FiChevronRight, FiSearch, FiFilter, FiRotateCcw, FiMail, FiCheck, FiSend } from 'react-icons/fi'
 import Avatar from '../components/Avatar'
 
 const ProfilePage = () => {
@@ -151,6 +151,18 @@ const ProfilePage = () => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.error || 'Failed to resend code')
+    },
+  })
+
+  // Publish draft mutation
+  const publishDraftMutation = useMutation({
+    mutationFn: (postId) => postAPI.updateStatus(postId, 'published'),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['drafts'])
+      toast.success('Draft published successfully!')
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'Failed to publish draft')
     },
   })
 
@@ -332,14 +344,34 @@ const ProfilePage = () => {
           ) : (
             <div className="space-y-3">
               {drafts.map((draft) => (
-                <Link
+                <div
                   key={draft.postId}
-                  to={`/posts/${draft.postId}`}
-                  className="block bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors"
+                  className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors"
                 >
-                  <h3 className="text-white font-medium">{draft.title}</h3>
-                  <p className="text-gray-400 text-sm">{formatDate(draft.dateCreated)}</p>
-                </Link>
+                  <div className="flex items-start justify-between gap-4">
+                    <Link
+                      to={`/posts/${draft.postId}`}
+                      className="flex-1"
+                    >
+                      <h3 className="text-white font-medium">{draft.title}</h3>
+                      <p className="text-gray-400 text-sm">{formatDate(draft.dateCreated)}</p>
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        if (window.confirm('Are you sure you want to publish this draft?')) {
+                          publishDraftMutation.mutate(draft.postId)
+                        }
+                      }}
+                      disabled={publishDraftMutation.isPending}
+                      className="btn-primary flex items-center gap-2 text-sm px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FiSend className="w-4 h-4" />
+                      {publishDraftMutation.isPending ? 'Publishing...' : 'Publish'}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}

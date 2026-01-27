@@ -448,9 +448,13 @@ const PostDetailPage = () => {
 
   const updateStatusMutation = useMutation({
     mutationFn: (status) => postAPI.updateStatus(id, status),
-    onSuccess: () => {
+    onSuccess: (_, status) => {
       queryClient.invalidateQueries(["post", id]);
-      toast.success("Post visibility updated");
+      if (status === "published") {
+        toast.success("Post published successfully!");
+      } else {
+        toast.success("Post visibility updated");
+      }
     },
   });
 
@@ -714,30 +718,46 @@ const PostDetailPage = () => {
           <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
             {isOwner && post.status !== "banned" && (
               <>
+                {post.status === "unpublished" && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to publish this post?')) {
+                        updateStatusMutation.mutate('published')
+                      }
+                    }}
+                    className="btn-primary flex items-center gap-2 text-sm"
+                  >
+                    <FiSend /> Publish
+                  </button>
+                )}
                 <button
                   onClick={() => setShowEditModal(true)}
                   className="btn-secondary flex items-center gap-2 text-sm"
                 >
                   <FiEdit2 /> Edit
                 </button>
-                <button
-                  onClick={() => archiveMutation.mutate()}
-                  className="btn-secondary flex items-center gap-2 text-sm"
-                >
-                  {post.isArchived ? <FiUnlock /> : <FiLock />}
-                  {post.isArchived ? "Enable Replies" : "Disable Replies"}
-                </button>
-                <button
-                  onClick={() =>
-                    updateStatusMutation.mutate(
-                      post.status === "hidden" ? "published" : "hidden",
-                    )
-                  }
-                  className="btn-secondary flex items-center gap-2 text-sm"
-                >
-                  {post.status === "hidden" ? <FiEye /> : <FiEyeOff />}
-                  {post.status === "hidden" ? "Show Post" : "Hide Post"}
-                </button>
+                {post.status === "published" && (
+                  <>
+                    <button
+                      onClick={() => archiveMutation.mutate()}
+                      className="btn-secondary flex items-center gap-2 text-sm"
+                    >
+                      {post.isArchived ? <FiUnlock /> : <FiLock />}
+                      {post.isArchived ? "Enable Replies" : "Disable Replies"}
+                    </button>
+                    <button
+                      onClick={() =>
+                        updateStatusMutation.mutate(
+                          post.status === "hidden" ? "published" : "hidden",
+                        )
+                      }
+                      className="btn-secondary flex items-center gap-2 text-sm"
+                    >
+                      {post.status === "hidden" ? <FiEye /> : <FiEyeOff />}
+                      {post.status === "hidden" ? "Show Post" : "Hide Post"}
+                    </button>
+                  </>
+                )}
               </>
             )}
             {isOwner && (
