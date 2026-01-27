@@ -44,7 +44,7 @@ const ProfilePage = () => {
     enabled: isOwnProfile,
   })
 
-  // Fetch history (only for own profile)
+  // Fetch history (now available for all users)
   const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['history', id, historyPage, isSearching, searchKeyword, searchDate],
     queryFn: () => {
@@ -53,7 +53,7 @@ const ProfilePage = () => {
       }
       return historyAPI.getUserHistory(id, { page: historyPage, limit: historyPerPage })
     },
-    enabled: isOwnProfile,
+    enabled: !!id,
   })
 
   const user = userData?.data?.user
@@ -346,9 +346,8 @@ const ProfilePage = () => {
         </div>
       )}
 
-      {/* View History (Own profile only) */}
-      {isOwnProfile && (
-        <div className="card p-6">
+      {/* View History (Available for all users) */}
+      <div className="card p-6">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
             <FiClock />
             View History
@@ -511,7 +510,6 @@ const ProfilePage = () => {
             </>
           )}
         </div>
-      )}
 
       {/* Edit Modal */}
       {showEditModal && (
