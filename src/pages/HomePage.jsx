@@ -262,13 +262,31 @@ const HomePage = () => {
                   
                   <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
-                      <Avatar
-                        profileImageUrl={post.user?.profileImageUrl}
-                        firstName={post.user?.firstName}
-                        lastName={post.user?.lastName}
-                        size="w-6 h-6"
-                      />
-                      <span>{post.user?.firstName} {post.user?.lastName}</span>
+                      {post.user?.userId ? (
+                        <Link
+                          to={`/users/${post.user.userId}/profile`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-2 hover:text-white transition-colors"
+                        >
+                          <Avatar
+                            profileImageUrl={post.user?.profileImageUrl}
+                            firstName={post.user?.firstName}
+                            lastName={post.user?.lastName}
+                            size="w-6 h-6"
+                          />
+                          <span>{post.user?.firstName} {post.user?.lastName}</span>
+                        </Link>
+                      ) : (
+                        <>
+                          <Avatar
+                            profileImageUrl={post.user?.profileImageUrl}
+                            firstName={post.user?.firstName}
+                            lastName={post.user?.lastName}
+                            size="w-6 h-6"
+                          />
+                          <span>{post.user?.firstName} {post.user?.lastName}</span>
+                        </>
+                      )}
                       {post.user?.userId && (
                         <div className="flex items-center gap-1 text-gray-500 hover:text-gray-300 transition-colors">
                           <FiHash className="w-3 h-3" />

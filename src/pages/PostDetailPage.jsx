@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { postAPI, replyAPI, historyAPI, fileAPI } from "../services/api";
@@ -82,29 +82,64 @@ const NestedReplies = ({
                   <div className="mb-3 text-xs flex items-center gap-2 bg-primary-500/20 px-3 py-1.5 rounded-lg w-fit border border-primary-500/40 shadow-lg">
                     <FiCornerDownRight className="w-4 h-4 text-primary-400 flex-shrink-0" />
                     <span className="text-gray-300">Replying to</span>
-                    <span className="text-primary-200 font-bold">
-                      {parentReply.user.firstName} {parentReply.user.lastName}
-                    </span>
+                    {parentReply.user.userId ? (
+                      <Link
+                        to={`/users/${parentReply.user.userId}/profile`}
+                        className="text-primary-200 font-bold hover:text-primary-100 transition-colors"
+                      >
+                        {parentReply.user.firstName} {parentReply.user.lastName}
+                      </Link>
+                    ) : (
+                      <span className="text-primary-200 font-bold">
+                        {parentReply.user.firstName} {parentReply.user.lastName}
+                      </span>
+                    )}
                   </div>
                 )}
 
                 <div className="flex items-center gap-2 mb-2">
-                  <Avatar
-                    profileImageUrl={subReply.user?.profileImageUrl}
-                    firstName={subReply.user?.firstName}
-                    lastName={subReply.user?.lastName}
-                    size="w-6 h-6"
-                  />
-                  <div>
-                    <p className="text-white font-medium text-xs">
-                      {subReply.user?.firstName} {subReply.user?.lastName}
-                    </p>
-                    <p className="text-gray-500 text-xs">
-                      {subReply.dateCreated
-                        ? formatDate(subReply.dateCreated)
-                        : "Unknown date"}
-                    </p>
-                  </div>
+                  {subReply.user?.userId ? (
+                    <Link
+                      to={`/users/${subReply.user.userId}/profile`}
+                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    >
+                      <Avatar
+                        profileImageUrl={subReply.user?.profileImageUrl}
+                        firstName={subReply.user?.firstName}
+                        lastName={subReply.user?.lastName}
+                        size="w-6 h-6"
+                      />
+                      <div>
+                        <p className="text-white font-medium text-xs">
+                          {subReply.user?.firstName} {subReply.user?.lastName}
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                          {subReply.dateCreated
+                            ? formatDate(subReply.dateCreated)
+                            : "Unknown date"}
+                        </p>
+                      </div>
+                    </Link>
+                  ) : (
+                    <>
+                      <Avatar
+                        profileImageUrl={subReply.user?.profileImageUrl}
+                        firstName={subReply.user?.firstName}
+                        lastName={subReply.user?.lastName}
+                        size="w-6 h-6"
+                      />
+                      <div>
+                        <p className="text-white font-medium text-xs">
+                          {subReply.user?.firstName} {subReply.user?.lastName}
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                          {subReply.dateCreated
+                            ? formatDate(subReply.dateCreated)
+                            : "Unknown date"}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -598,25 +633,54 @@ const PostDetailPage = () => {
 
         {/* Author info */}
         <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/10">
-          <Avatar
-            profileImageUrl={post.user?.profileImageUrl}
-            firstName={post.user?.firstName}
-            lastName={post.user?.lastName}
-            size="w-12 h-12"
-          />
-          <div>
-            <p className="text-white font-medium">
-              {post.user?.firstName} {post.user?.lastName}
-            </p>
-            <p className="text-gray-400 text-sm">
-              {formatDate(post.dateCreated)}
-            </p>
-            {post.dateModified && (
-              <p className="text-gray-500 text-xs">
-                Last edited: {formatDate(post.dateModified)}
-              </p>
-            )}
-          </div>
+          {post.user?.userId ? (
+            <Link
+              to={`/users/${post.user.userId}/profile`}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
+              <Avatar
+                profileImageUrl={post.user?.profileImageUrl}
+                firstName={post.user?.firstName}
+                lastName={post.user?.lastName}
+                size="w-12 h-12"
+              />
+              <div>
+                <p className="text-white font-medium">
+                  {post.user?.firstName} {post.user?.lastName}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  {formatDate(post.dateCreated)}
+                </p>
+                {post.dateModified && (
+                  <p className="text-gray-500 text-xs">
+                    Last edited: {formatDate(post.dateModified)}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ) : (
+            <>
+              <Avatar
+                profileImageUrl={post.user?.profileImageUrl}
+                firstName={post.user?.firstName}
+                lastName={post.user?.lastName}
+                size="w-12 h-12"
+              />
+              <div>
+                <p className="text-white font-medium">
+                  {post.user?.firstName} {post.user?.lastName}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  {formatDate(post.dateCreated)}
+                </p>
+                {post.dateModified && (
+                  <p className="text-gray-500 text-xs">
+                    Last edited: {formatDate(post.dateModified)}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Content */}
@@ -790,20 +854,44 @@ const PostDetailPage = () => {
               <div key={reply.replyId} className="bg-white/5 rounded-xl p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3 mb-3">
-                    <Avatar
-                      profileImageUrl={reply.user?.profileImageUrl}
-                      firstName={reply.user?.firstName}
-                      lastName={reply.user?.lastName}
-                      size="w-8 h-8"
-                    />
-                    <div>
-                      <p className="text-white font-medium text-sm">
-                        {reply.user?.firstName} {reply.user?.lastName}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        {formatDate(reply.dateCreated)}
-                      </p>
-                    </div>
+                    {reply.user?.userId ? (
+                      <Link
+                        to={`/users/${reply.user.userId}/profile`}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                      >
+                        <Avatar
+                          profileImageUrl={reply.user?.profileImageUrl}
+                          firstName={reply.user?.firstName}
+                          lastName={reply.user?.lastName}
+                          size="w-8 h-8"
+                        />
+                        <div>
+                          <p className="text-white font-medium text-sm">
+                            {reply.user?.firstName} {reply.user?.lastName}
+                          </p>
+                          <p className="text-gray-500 text-xs">
+                            {formatDate(reply.dateCreated)}
+                          </p>
+                        </div>
+                      </Link>
+                    ) : (
+                      <>
+                        <Avatar
+                          profileImageUrl={reply.user?.profileImageUrl}
+                          firstName={reply.user?.firstName}
+                          lastName={reply.user?.lastName}
+                          size="w-8 h-8"
+                        />
+                        <div>
+                          <p className="text-white font-medium text-sm">
+                            {reply.user?.firstName} {reply.user?.lastName}
+                          </p>
+                          <p className="text-gray-500 text-xs">
+                            {formatDate(reply.dateCreated)}
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Delete button for reply owner, post owner, or admin */}
