@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { userAPI } from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
@@ -7,7 +8,7 @@ import Avatar from '../../components/Avatar'
 
 const UsersPage = () => {
   const queryClient = useQueryClient()
-  const { user: currentUser, isSuperAdmin } = useAuthStore()
+  const { user: currentUser, isSuperAdmin, isAdmin } = useAuthStore()
 
   const { data, isLoading } = useQuery({
     queryKey: ['users'],
@@ -138,17 +139,34 @@ const UsersPage = () => {
                       #{user.userId}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          profileImageUrl={user.profileImageUrl}
-                          firstName={user.firstName}
-                          lastName={user.lastName}
-                          size="w-8 h-8"
-                        />
-                        <span className="text-white font-medium">
-                          {user.firstName} {user.lastName}
-                        </span>
-                      </div>
+                      {isAdmin() ? (
+                        <Link
+                          to={`/users/${user.userId}/profile`}
+                          className="flex items-center gap-3 hover:text-primary-400 transition-colors"
+                        >
+                          <Avatar
+                            profileImageUrl={user.profileImageUrl}
+                            firstName={user.firstName}
+                            lastName={user.lastName}
+                            size="w-8 h-8"
+                          />
+                          <span className="text-white font-medium">
+                            {user.firstName} {user.lastName}
+                          </span>
+                        </Link>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Avatar
+                            profileImageUrl={user.profileImageUrl}
+                            firstName={user.firstName}
+                            lastName={user.lastName}
+                            size="w-8 h-8"
+                          />
+                          <span className="text-white font-medium">
+                            {user.firstName} {user.lastName}
+                          </span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-gray-300">
                       {user.email}
