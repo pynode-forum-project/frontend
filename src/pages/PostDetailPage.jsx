@@ -692,6 +692,31 @@ const PostDetailPage = () => {
           {post.content}
         </div>
 
+        {/* Post Images */}
+        {post.images && post.images.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Images:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {post.images.map((url, index) => (
+                <div
+                  key={index}
+                  className="relative group bg-white/5 rounded-lg overflow-hidden"
+                >
+                  <img
+                    src={url}
+                    alt={`Post image ${index + 1}`}
+                    className="w-full h-auto max-h-96 object-contain rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => window.open(url, '_blank')}
+                    onError={(e) => {
+                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3EImage not found%3C/text%3E%3C/svg%3E'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Post Attachments */}
         {post.attachments && post.attachments.length > 0 && (
           <div className="mb-6 space-y-2">

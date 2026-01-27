@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { postAPI, fileAPI } from '../services/api'
 import { useAuthStore } from '../store/authStore'
-import { FiX, FiSend, FiSave, FiPaperclip, FiXCircle } from 'react-icons/fi'
+import { FiX, FiSend, FiSave, FiPaperclip, FiXCircle, FiImage, FiEdit2 } from 'react-icons/fi'
 
 const CreatePostModal = ({ onClose, editPost = null }) => {
   const queryClient = useQueryClient()
@@ -11,10 +11,13 @@ const CreatePostModal = ({ onClose, editPost = null }) => {
   const [formData, setFormData] = useState({
     title: editPost?.title || '',
     content: editPost?.content || '',
+    images: editPost?.images || [],
     attachments: editPost?.attachments || [],
   })
   const [uploadingFiles, setUploadingFiles] = useState([])
+  const [uploadingImages, setUploadingImages] = useState([])
   const [selectedFiles, setSelectedFiles] = useState([])
+  const [selectedImages, setSelectedImages] = useState([])
 
   const createMutation = useMutation({
     mutationFn: (data) => editPost 
@@ -30,9 +33,44 @@ const CreatePostModal = ({ onClose, editPost = null }) => {
     },
   })
 
+  const isImageFile = (file) => {
+    return file.type.startsWith('image/')
+  }
+
+  const handleImageSelect = async (e) => {
+    const files = Array.from(e.target.files).filter(isImageFile)
+    if (files.length === 0) {
+      toast.error('Please select image files only')
+      return
+    }
+
+    setUploadingImages(files.map(f => f.name))
+
+    try {
+      const uploadPromises = files.map(file => 
+        fileAPI.upload(file, 'post').then(res => res.data.url)
+      )
+      
+      const urls = await Promise.all(uploadPromises)
+      setFormData({
+        ...formData,
+        images: [...formData.images, ...urls]
+      })
+      setSelectedImages([...selectedImages, ...files])
+      setUploadingImages([])
+      toast.success(`${files.length} image(s) uploaded successfully`)
+    } catch (error) {
+      toast.error('Failed to upload image(s)')
+      setUploadingImages([])
+    }
+  }
+
   const handleFileSelect = async (e) => {
-    const files = Array.from(e.target.files)
-    if (files.length === 0) return
+    const files = Array.from(e.target.files).filter(f => !isImageFile(f))
+    if (files.length === 0) {
+      toast.error('Please select non-image files only')
+      return
+    }
 
     setUploadingFiles(files.map(f => f.name))
 
@@ -55,6 +93,14 @@ const CreatePostModal = ({ onClose, editPost = null }) => {
     }
   }
 
+  const handleRemoveImage = (index) => {
+    setFormData({
+      ...formData,
+      images: formData.images.filter((_, i) => i !== index)
+    })
+    setSelectedImages(selectedImages.filter((_, i) => i !== index))
+  }
+
   const handleRemoveAttachment = (index) => {
     setFormData({
       ...formData,
@@ -68,7 +114,12 @@ const CreatePostModal = ({ onClose, editPost = null }) => {
       toast.error('Title and content are required')
       return
     }
-    createMutation.mutate({ ...formData, status })
+    // When editing a published post, don't change status
+    // Only update content without changing status
+    const submitData = editPost && editPost.status === 'published'
+      ? { ...formData } // Don't include status for published posts
+      : { ...formData, status } // Include status for new posts or drafts
+    createMutation.mutate(submitData)
   }
 
   const getFileName = (url) => {
@@ -140,6 +191,60 @@ const CreatePostModal = ({ onClose, editPost = null }) => {
             />
           </div>
 
+          {/* Images */}
+          <div>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              Images
+            </label>
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                  disabled={uploadingImages.length > 0}
+                />
+                <div className="btn-secondary flex items-center gap-2 w-fit">
+                  <FiImage />
+                  {uploadingImages.length > 0 ? 'Uploading...' : 'Add Images'}
+                </div>
+              </label>
+
+              {/* Uploading indicator */}
+              {uploadingImages.length > 0 && (
+                <div className="text-sm text-gray-400">
+                  Uploading: {uploadingImages.join(', ')}
+                </div>
+              )}
+
+              {/* Images preview */}
+              {formData.images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {formData.images.map((url, index) => (
+                    <div
+                      key={index}
+                      className="relative group bg-white/5 rounded-lg overflow-hidden"
+                    >
+                      <img
+                        src={url}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover"
+                      />
+                      <button
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <FiXCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Attachments */}
           <div>
             <label className="block text-gray-300 text-sm font-medium mb-2">
@@ -199,28 +304,51 @@ const CreatePostModal = ({ onClose, editPost = null }) => {
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
-            <button
-              onClick={() => handleSubmit('unpublished')}
-              disabled={createMutation.isPending}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <FiSave />
-              Save as Draft
-            </button>
-            <button
-              onClick={() => handleSubmit('published')}
-              disabled={createMutation.isPending}
-              className="btn-primary flex items-center gap-2 flex-1"
-            >
-              {createMutation.isPending ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <FiSend />
-                  Publish
-                </>
-              )}
-            </button>
+            {/* Show "Save as Draft" only for new posts or unpublished posts */}
+            {(!editPost || editPost.status === 'unpublished') && (
+              <button
+                onClick={() => handleSubmit('unpublished')}
+                disabled={createMutation.isPending}
+                className="btn-secondary flex items-center gap-2"
+              >
+                <FiSave />
+                Save as Draft
+              </button>
+            )}
+            {/* Show "Publish" for new posts or drafts */}
+            {(!editPost || editPost.status === 'unpublished') && (
+              <button
+                onClick={() => handleSubmit('published')}
+                disabled={createMutation.isPending}
+                className="btn-primary flex items-center gap-2 flex-1"
+              >
+                {createMutation.isPending ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <FiSend />
+                    Publish
+                  </>
+                )}
+              </button>
+            )}
+            {/* Show "Update Post" for published posts being edited */}
+            {editPost && editPost.status === 'published' && (
+              <button
+                onClick={() => handleSubmit()}
+                disabled={createMutation.isPending}
+                className="btn-primary flex items-center gap-2 flex-1"
+              >
+                {createMutation.isPending ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <FiEdit2 />
+                    Update Post
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
