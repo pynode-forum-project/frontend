@@ -51,12 +51,23 @@ const ProfilePage = () => {
     enabled: isOwnProfile,
   })
 
+  const getDateTzOffset = (dateString) => {
+    if (!dateString) return undefined
+    const [year, month, day] = dateString.split('-').map(Number)
+    if (!year || !month || !day) return undefined
+    return new Date(year, month - 1, day).getTimezoneOffset()
+  }
+
   // Fetch history (only for own profile)
   const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['history', id, historyPage, isSearching, searchKeyword, searchDate],
     queryFn: () => {
       if (isSearching && (searchKeyword || searchDate)) {
-        return historyAPI.search(id, { keyword: searchKeyword || undefined, date: searchDate || undefined })
+        return historyAPI.search(id, {
+          keyword: searchKeyword || undefined,
+          date: searchDate || undefined,
+          tzOffset: getDateTzOffset(searchDate),
+        })
       }
       return historyAPI.getUserHistory(id, { page: historyPage, limit: historyPerPage })
     },
@@ -234,6 +245,23 @@ const ProfilePage = () => {
       month: 'long',
       day: 'numeric',
     })
+  }
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const formatLocalDate = (dateString) => {
+    if (!dateString) return ''
+    const [year, month, day] = dateString.split('-').map(Number)
+    if (!year || !month || !day) return dateString
+    return new Date(year, month - 1, day).toLocaleDateString('en-US')
   }
 
   if (userLoading) {
@@ -514,7 +542,7 @@ const ProfilePage = () => {
                 <span>
                   {searchKeyword && `Keyword: "${searchKeyword}"`}
                   {searchKeyword && searchDate && ' • '}
-                  {searchDate && `Date: ${new Date(searchDate).toLocaleDateString()}`}
+                  {searchDate && `Date: ${formatLocalDate(searchDate)}`}
                 </span>
               </div>
             )}
@@ -539,7 +567,7 @@ const ProfilePage = () => {
                     className="block bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors"
                   >
                     <h3 className="text-white font-medium mb-1">{item.post?.title || 'Post'}</h3>
-                    <p className="text-gray-400 text-sm">Viewed {formatDate(item.viewDate)}</p>
+                    <p className="text-gray-400 text-sm">Viewed {formatDateTime(item.viewDate)}</p>
                   </Link>
                 ))}
               </div>
