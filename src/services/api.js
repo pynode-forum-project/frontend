@@ -58,6 +58,19 @@ api.interceptors.response.use(
       }
 
       if (
+        errorMessage === "Account has been deleted" ||
+        errorData.message?.includes("deleted")
+      ) {
+        // User has been deleted, logout and show message
+        useAuthStore.getState().logout();
+        toast.error("Your account has been deleted. Please log in again.");
+        setTimeout(() => {
+          window.location.href = "/users/login";
+        }, 1000);
+        return Promise.reject(error);
+      }
+
+      if (
         errorMessage === "User role has changed" ||
         errorData.message?.includes("role has been changed")
       ) {
